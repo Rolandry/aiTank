@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" shape-rendering="crispEdges">
+  <!-- 子弹 · 正圆形 · 亮白色+黄色描边 · 12×12px -->
+  <!-- 黄色描边(1px) -->
+  <rect x="1" y="0" width="10" height="1" fill="#FFEB3B"/>
+  <rect x="0" y="1" width="1" height="10" fill="#FFEB3B"/>
+  <rect x="11" y="1" width="1" height="10" fill="#FFEB3B"/>
+  <rect x="1" y="11" width="10" height="1" fill="#FFEB3B"/>
+  <!-- 角落描边 -->
+  <rect x="1" y="1" width="1" height="1" fill="#FFEB3B"/>
+  <rect x="10" y="1" width="1" height="1" fill="#FFEB3B"/>
+  <rect x="1" y="10" width="1" height="1" fill="#FFEB3B"/>
+  <rect x="10" y="10" width="1" height="1" fill="#FFEB3B"/>
+  <!-- 白色弹体 -->
+  <rect x="2" y="1" width="8" height="10" fill="#FFFFFF"/>
+  <rect x="1" y="2" width="10" height="8" fill="#FFFFFF"/>
+  <!-- 发光中心 -->
+  <rect x="4" y="4" width="4" height="4" fill="#FFFDE7"/>
+</svg>

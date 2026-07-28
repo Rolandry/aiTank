@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" shape-rendering="crispEdges">
+  <!-- 爆炸帧3：范围扩大+烟雾 · 48px直径 -->
+  <!-- 外围淡灰烟雾 -->
+  <rect x="8" y="4" width="48" height="56" fill="#BDBDBD" opacity="0.5"/>
+  <rect x="4" y="8" width="56" height="48" fill="#BDBDBD" opacity="0.5"/>
+  <rect x="0" y="16" width="64" height="32" fill="#BDBDBD" opacity="0.5"/>
+  <rect x="16" y="0" width="32" height="64" fill="#BDBDBD" opacity="0.5"/>
+  <!-- 橙色火焰残留 -->
+  <rect x="14" y="10" width="36" height="44" fill="#FF9800" opacity="0.6"/>
+  <rect x="10" y="14" width="44" height="36" fill="#FF9800" opacity="0.6"/>
+  <rect x="6" y="20" width="52" height="24" fill="#FF9800" opacity="0.6"/>
+  <rect x="20" y="6" width="24" height="52" fill="#FF9800" opacity="0.6"/>
+  <!-- 黄色中心 -->
+  <rect x="22" y="18" width="20" height="28" fill="#FFEB3B" opacity="0.8"/>
+  <rect x="18" y="22" width="28" height="20" fill="#FFEB3B" opacity="0.8"/>
+  <!-- 白色核心残光 -->
+  <rect x="26" y="24" width="12" height="16" fill="#FFFFFF" opacity="0.6"/>
+  <rect x="24" y="26" width="16" height="12" fill="#FFFFFF" opacity="0.6"/>
+  <!-- 碎片 -->
+  <rect x="2" y="10" width="4" height="4" fill="#9E9E9E"/>
+  <rect x="58" y="10" width="4" height="4" fill="#9E9E9E"/>
+  <rect x="2" y="50" width="4" height="4" fill="#9E9E9E"/>
+  <rect x="58" y="50" width="4" height="4" fill="#9E9E9E"/>
+  <rect x="8" y="2" width="4" height="4" fill="#FFC107"/>
+  <rect x="52" y="2" width="4" height="4" fill="#FFC107"/>
+  <rect x="8" y="58" width="4" height="4" fill="#FFC107"/>
+  <rect x="52" y="58" width="4" height="4" fill="#FFC107"/>
+</svg>
