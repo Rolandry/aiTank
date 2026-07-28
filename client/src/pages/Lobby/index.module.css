@@ -1,0 +1,107 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #1a1a2e;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.heading {
+  font-size: 32px;
+  margin-bottom: 24px;
+  color: #f1c40f;
+}
+
+.roomInfo {
+  display: flex;
+  gap: 32px;
+  font-size: 18px;
+  margin-bottom: 24px;
+  color: #aaa;
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+  min-width: 280px;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #16213e;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.colorDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hostBadge {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: #f1c40f;
+  color: #1a1a2e;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.startButton {
+  padding: 12px 32px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2ecc71;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.startButton:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.startButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leaveButton {
+  padding: 12px 32px;
+  font-size: 16px;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  background: transparent;
+  color: #e74c3c;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.leaveButton:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.hint {
+  margin-top: 16px;
+  color: #888;
+  font-size: 14px;
+}

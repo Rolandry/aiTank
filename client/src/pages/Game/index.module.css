@@ -1,0 +1,147 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #1a1a2e;
+  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+.canvas {
+  border: 2px solid #444;
+  image-rendering: pixelated;
+}
+
+/* 倒计时 */
+.countdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10;
+}
+
+.countdown span {
+  font-size: 120px;
+  font-weight: bold;
+  color: #f1c40f;
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+  animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* 观战标识 */
+.badge {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 20px;
+  background: rgba(231, 76, 60, 0.8);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 5;
+}
+
+/* 淘汰提示 */
+.eliminatedOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #e74c3c;
+  font-size: 20px;
+  z-index: 5;
+}
+
+.eliminatedOverlay p {
+  margin: 4px 0;
+}
+
+/* 游戏结束 */
+.gameOverOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 20;
+}
+
+.gameOverOverlay h2 {
+  font-size: 36px;
+  color: #f1c40f;
+  margin-bottom: 16px;
+}
+
+.gameOverOverlay p {
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+/* 断线提示 */
+.disconnectedOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 20;
+}
+
+.disconnectedOverlay h2 {
+  font-size: 28px;
+  color: #e74c3c;
+  margin-bottom: 24px;
+}
+
+/* 返回按钮 */
+.backButton {
+  padding: 12px 32px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #f1c40f;
+  color: #1a1a2e;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.backButton:hover {
+  background: #f39c12;
+}
