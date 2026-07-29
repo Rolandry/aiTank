@@ -12,7 +12,6 @@ import {
   bulletRect,
   tankRect,
   hitsObstacle,
-  hitsSolidObstacle,
   insideMap,
   DIRECTION_VECTOR,
 } from "./collision";
@@ -31,7 +30,7 @@ const BULLET_SPEED = 420; // px/s
 const POWERUP_TYPES = Object.keys(POWERUP_CONFIG) as PowerupType[];
 // 恢复类权重较低，避免回血主导对局
 const POWERUP_WEIGHT: Record<PowerupType, number> = {
-  shrink: 3, speed: 3, shield: 3, ghost: 2, swift_dash: 2,
+  shrink: 3, speed: 3, shield: 3, swift_dash: 2,
   heal: 2,
   rapid: 3, bigshot: 3, spread: 2, pierce: 2, ricochet: 2, power_shot: 2,
 };
@@ -381,10 +380,7 @@ export class GameWorld {
   private canPlaceTank(player: ServerPlayer, cx: number, cy: number): boolean {
     const rect = tankRect(cx, cy, this.tankSize(player));
     if (!insideMap(rect)) return false;
-    // ghost 期间只被不可破坏墙体阻挡
-    return this.hasEffect(player, "ghost")
-      ? !hitsSolidObstacle(rect, this.room.obstacles)
-      : !hitsObstacle(rect, this.room.obstacles);
+    return !hitsObstacle(rect, this.room.obstacles);
   }
 
   private moveBullets(dt: number): void {

@@ -220,16 +220,16 @@ export default function Game() {
     audioManager.play("hit", 0.3);
   });
 
-  // 技能球拾取：播放距离衰减音效并在拾取点显示特效
+  // 技能球拾取：坦克边缘闪光 + 音效
   useSocketMessage("powerup_collected", (msg) => {
-    rendererRef.current?.explosions.add(msg.x, msg.y);
+    rendererRef.current?.flashPickup(msg.playerId);
     audioManager.playWithDistance(
-      "hit",
+      "coin",
       msg.x,
       msg.y,
       myPosRef.current.x,
       myPosRef.current.y,
-      0.4
+      0.5
     );
   });
 

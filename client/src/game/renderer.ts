@@ -35,6 +35,7 @@ export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private myPlayerId: string | null = null;
   private hitFlashMap = new Map<string, number>();
+  private pickupFlashMap = new Map<string, number>();
   private dashEffects: Array<{
     fromX: number;
     fromY: number;
@@ -60,6 +61,10 @@ export class GameRenderer {
 
   flashPlayer(playerId: string): void {
     this.hitFlashMap.set(playerId, Date.now());
+  }
+
+  flashPickup(playerId: string): void {
+    this.pickupFlashMap.set(playerId, Date.now());
   }
 
   addDashEffect(fromX: number, fromY: number, toX: number, toY: number, color: string): void {
@@ -430,6 +435,30 @@ export class GameRenderer {
         this.ctx.strokeStyle = "#fff";
         this.ctx.lineWidth = 3;
         this.ctx.strokeRect(x - 2, y - 2, size + 4, size + 4);
+      }
+
+      // 拾取技能球闪光（坦克边缘闪两下）
+      const pickupTime = this.pickupFlashMap.get(player.playerId);
+      if (pickupTime) {
+        const elapsed = Date.now() - pickupTime;
+        const DURATION = 600;
+        if (elapsed < DURATION) {
+          // 两次脉冲：0-250ms 和 300-550ms
+          const pulse1 = elapsed < 250 ? Math.sin((elapsed / 250) * Math.PI) : 0;
+          const pulse2 = elapsed >= 300 && elapsed < 550 ? Math.sin(((elapsed - 300) / 250) * Math.PI) : 0;
+          const intensity = Math.max(pulse1, pulse2);
+          if (intensity > 0) {
+            this.ctx.save();
+            this.ctx.strokeStyle = `rgba(255, 255, 255, ${intensity})`;
+            this.ctx.lineWidth = 4;
+            this.ctx.beginPath();
+            this.ctx.arc(player.x, player.y, size / 2 + 4 + intensity * 6, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.restore();
+          }
+        } else {
+          this.pickupFlashMap.delete(player.playerId);
+        }
       }
 
       this.renderPlayerInfo(player, x, y, size);

@@ -106,7 +106,6 @@ export type PowerupType =
   | "shrink"
   | "speed"
   | "shield"
-  | "ghost"
   | "swift_dash"
   | "heal"
   | "rapid"
@@ -341,7 +340,6 @@ export const POWERUP_CONFIG: Record<
   shrink: { category: "status", durationMs: 12000, label: "缩小", color: "#7fd1ff" },
   speed: { category: "status", durationMs: 10000, label: "加速", color: "#8affc1" },
   shield: { category: "status", durationMs: 15000, label: "护盾", color: "#c9b6ff" },
-  ghost: { category: "status", durationMs: 8000, label: "穿林", color: "#b6e3ff" },
   swift_dash: { category: "status", durationMs: 15000, label: "疾冲", color: "#9fe8ff" },
   heal: { category: "recovery", durationMs: 0, label: "治疗", color: "#ff8f9c" },
   rapid: { category: "offense", durationMs: 10000, label: "连射", color: "#ffd166" },
