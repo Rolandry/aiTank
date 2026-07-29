@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" shape-rendering="crispEdges">
+  <!-- 示例：红色坦克击败蓝色坦克后的显示效果 -->
+  
+  <!-- 背景标题 -->
+  <text x="200" y="20" text-anchor="middle" fill="#333" font-size="14" font-family="Arial, sans-serif">击杀标记使用示例</text>
+  <text x="200" y="38" text-anchor="middle" fill="#666" font-size="11" font-family="Arial, sans-serif">红色坦克击败蓝色坦克后，红色坦克头顶显示蓝色标记</text>
+  
+  <!-- 左侧：红色坦克（击败者） -->
+  <g transform="translate(80, 70)">
+    <!-- 标签 -->
+    <text x="32" y="-20" text-anchor="middle" fill="#666" font-size="11" font-family="Arial, sans-serif">击败者</text>
+    <text x="32" y="-8" text-anchor="middle" fill="#E53935" font-size="12" font-family="Arial, sans-serif" font-weight="bold">红色坦克</text>
+    
+    <!-- 蓝色击杀标记（显示在坦克上方） -->
+    <g transform="translate(22, -26)">
+      <rect x="2" y="2" width="16" height="16" fill="#155A9C" rx="1"/>
+      <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#1E88E5"/>
+      <rect x="9" y="5" width="2" height="2" fill="#42A5F5" opacity="0.8"/>
+      <rect x="2" y="2" width="16" height="1" fill="#0D47A1" opacity="0.6"/>
+    </g>
+    
+    <!-- 箭头指示 -->
+    <path d="M 32 -30 L 32 -35 M 30 -33 L 32 -35 L 34 -33" stroke="#1E88E5" stroke-width="2" fill="none"/>
+    <text x="50" y="-23" fill="#1E88E5" font-size="10" font-family="Arial, sans-serif">蓝色标记</text>
+    
+    <!-- 红色坦克 -->
+    <rect x="4" y="14" width="10" height="36" fill="#616161"/>
+    <rect x="4" y="14" width="2" height="36" fill="#757575"/>
+    <rect x="5" y="17" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="23" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="29" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="35" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="41" width="8" height="2" fill="#424242"/>
+    <rect x="50" y="14" width="10" height="36" fill="#616161"/>
+    <rect x="58" y="14" width="2" height="36" fill="#757575"/>
+    <rect x="51" y="17" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="23" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="29" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="35" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="41" width="8" height="2" fill="#424242"/>
+    <rect x="14" y="12" width="36" height="40" fill="#E53935"/>
+    <rect x="14" y="12" width="36" height="2" fill="#EF5350"/>
+    <rect x="14" y="50" width="36" height="2" fill="#C62828"/>
+    <rect x="16" y="18" width="4" height="28" fill="#EF5350" opacity="0.5"/>
+    <rect x="20" y="18" width="24" height="24" fill="#B71C1C" rx="2"/>
+    <rect x="22" y="20" width="20" height="20" fill="#D32F2F"/>
+    <rect x="24" y="22" width="4" height="4" fill="#E57373" opacity="0.6"/>
+    <rect x="29" y="0" width="6" height="22" fill="#212121"/>
+    <rect x="30" y="0" width="4" height="22" fill="#424242"/>
+    <rect x="29" y="0" width="6" height="2" fill="#616161"/>
+  </g>
+  
+  <!-- 中间箭头 -->
+  <g transform="translate(200, 120)">
+    <path d="M -30 0 L 30 0 M 24 -6 L 30 0 L 24 6" stroke="#666" stroke-width="2" fill="none"/>
+    <text x="0" y="-10" text-anchor="middle" fill="#43A047" font-size="11" font-family="Arial, sans-serif" font-weight="bold">击败</text>
+  </g>
+  
+  <!-- 右侧：蓝色坦克（被击败） -->
+  <g transform="translate(256, 70)">
+    <!-- 标签 -->
+    <text x="32" y="-20" text-anchor="middle" fill="#666" font-size="11" font-family="Arial, sans-serif">被击败</text>
+    <text x="32" y="-8" text-anchor="middle" fill="#1E88E5" font-size="12" font-family="Arial, sans-serif" font-weight="bold">蓝色坦克</text>
+    
+    <!-- 蓝色坦克 -->
+    <rect x="4" y="14" width="10" height="36" fill="#616161"/>
+    <rect x="4" y="14" width="2" height="36" fill="#757575"/>
+    <rect x="5" y="17" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="23" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="29" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="35" width="8" height="2" fill="#424242"/>
+    <rect x="5" y="41" width="8" height="2" fill="#424242"/>
+    <rect x="50" y="14" width="10" height="36" fill="#616161"/>
+    <rect x="58" y="14" width="2" height="36" fill="#757575"/>
+    <rect x="51" y="17" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="23" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="29" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="35" width="8" height="2" fill="#424242"/>
+    <rect x="51" y="41" width="8" height="2" fill="#424242"/>
+    <rect x="14" y="12" width="36" height="40" fill="#1E88E5"/>
+    <rect x="14" y="12" width="36" height="2" fill="#42A5F5"/>
+    <rect x="14" y="50" width="36" height="2" fill="#1565C0"/>
+    <rect x="16" y="18" width="4" height="28" fill="#42A5F5" opacity="0.5"/>
+    <rect x="20" y="18" width="24" height="24" fill="#0D47A1" rx="2"/>
+    <rect x="22" y="20" width="20" height="20" fill="#1976D2"/>
+    <rect x="24" y="22" width="4" height="4" fill="#64B5F6" opacity="0.6"/>
+    <rect x="29" y="0" width="6" height="22" fill="#212121"/>
+    <rect x="30" y="0" width="4" height="22" fill="#424242"/>
+    <rect x="29" y="0" width="6" height="2" fill="#616161"/>
+  </g>
+  
+  <!-- 说明文字 -->
+  <text x="200" y="185" text-anchor="middle" fill="#888" font-size="10" font-family="Arial, sans-serif">* 标记颜色 = 被击败坦克的颜色，显示在击败者坦克上方</text>
+</svg>

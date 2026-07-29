@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" shape-rendering="crispEdges">
+  <!-- 蓝色击杀标记 · 正俯视 · 20×20px -->
+  <!-- 外圈边框 -->
+  <rect x="2" y="2" width="16" height="16" fill="#155A9C" rx="1"/>
+  <!-- 主体五角星 -->
+  <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#1E88E5"/>
+  <!-- 高光细节 -->
+  <rect x="9" y="5" width="2" height="2" fill="#42A5F5" opacity="0.8"/>
+  <!-- 深色边缘 -->
+  <rect x="2" y="2" width="16" height="1" fill="#0D47A1" opacity="0.6"/>
+</svg>

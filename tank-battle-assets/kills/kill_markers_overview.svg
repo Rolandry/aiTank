@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="120" shape-rendering="crispEdges">
+  <!-- 四色击杀标记对比展示 -->
+  
+  <text x="180" y="20" text-anchor="middle" fill="#333" font-size="14" font-family="Arial, sans-serif" font-weight="bold">击杀标记 - 四色全览</text>
+  
+  <!-- 红色标记 -->
+  <g transform="translate(40, 40)">
+    <rect x="0" y="0" width="60" height="60" fill="#f5f5f5" stroke="#ddd" stroke-width="1" rx="2"/>
+    <g transform="translate(20, 20)">
+      <rect x="2" y="2" width="16" height="16" fill="#8D1917" rx="1"/>
+      <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#E53935"/>
+      <rect x="9" y="5" width="2" height="2" fill="#EF5350" opacity="0.8"/>
+      <rect x="2" y="2" width="16" height="1" fill="#B71C1C" opacity="0.6"/>
+    </g>
+    <text x="30" y="72" text-anchor="middle" fill="#E53935" font-size="11" font-family="Arial, sans-serif" font-weight="bold">红色</text>
+    <text x="30" y="84" text-anchor="middle" fill="#666" font-size="9" font-family="Arial, sans-serif">#E53935</text>
+  </g>
+  
+  <!-- 蓝色标记 -->
+  <g transform="translate(130, 40)">
+    <rect x="0" y="0" width="60" height="60" fill="#f5f5f5" stroke="#ddd" stroke-width="1" rx="2"/>
+    <g transform="translate(20, 20)">
+      <rect x="2" y="2" width="16" height="16" fill="#155A9C" rx="1"/>
+      <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#1E88E5"/>
+      <rect x="9" y="5" width="2" height="2" fill="#42A5F5" opacity="0.8"/>
+      <rect x="2" y="2" width="16" height="1" fill="#0D47A1" opacity="0.6"/>
+    </g>
+    <text x="30" y="72" text-anchor="middle" fill="#1E88E5" font-size="11" font-family="Arial, sans-serif" font-weight="bold">蓝色</text>
+    <text x="30" y="84" text-anchor="middle" fill="#666" font-size="9" font-family="Arial, sans-serif">#1E88E5</text>
+  </g>
+  
+  <!-- 绿色标记 -->
+  <g transform="translate(220, 40)">
+    <rect x="0" y="0" width="60" height="60" fill="#f5f5f5" stroke="#ddd" stroke-width="1" rx="2"/>
+    <g transform="translate(20, 20)">
+      <rect x="2" y="2" width="16" height="16" fill="#2D6A2F" rx="1"/>
+      <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#43A047"/>
+      <rect x="9" y="5" width="2" height="2" fill="#66BB6A" opacity="0.8"/>
+      <rect x="2" y="2" width="16" height="1" fill="#1B5E20" opacity="0.6"/>
+    </g>
+    <text x="30" y="72" text-anchor="middle" fill="#43A047" font-size="11" font-family="Arial, sans-serif" font-weight="bold">绿色</text>
+    <text x="30" y="84" text-anchor="middle" fill="#666" font-size="9" font-family="Arial, sans-serif">#43A047</text>
+  </g>
+  
+  <!-- 黄色标记 -->
+  <g transform="translate(310, 40)">
+    <rect x="0" y="0" width="60" height="60" fill="#f5f5f5" stroke="#ddd" stroke-width="1" rx="2"/>
+    <g transform="translate(20, 20)">
+      <rect x="2" y="2" width="16" height="16" fill="#C8A823" rx="1"/>
+      <polygon points="10,4 11,8 15,8 12,11 13,15 10,12 7,15 8,11 5,8 9,8" fill="#FDD835"/>
+      <rect x="9" y="5" width="2" height="2" fill="#FFEB3B" opacity="0.8"/>
+      <rect x="2" y="2" width="16" height="1" fill="#F9A825" opacity="0.6"/>
+    </g>
+    <text x="30" y="72" text-anchor="middle" fill="#FDD835" font-size="11" font-family="Arial, sans-serif" font-weight="bold">黄色</text>
+    <text x="30" y="84" text-anchor="middle" fill="#666" font-size="9" font-family="Arial, sans-serif">#FDD835</text>
+  </g>
+  
+  <text x="180" y="110" text-anchor="middle" fill="#888" font-size="9" font-family="Arial, sans-serif">尺寸：20×20px | 风格：像素风 | 用途：击杀成就标记</text>
+</svg>
