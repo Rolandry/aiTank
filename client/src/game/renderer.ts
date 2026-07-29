@@ -106,7 +106,39 @@ export class GameRenderer {
         this.ctx.fillStyle = OBSTACLE_COLORS[type] || FALLBACK_COLORS.wall;
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       }
+
+      // 可破坏障碍物显示血条
+      if (obs.destructible && obs.hp !== undefined && obs.maxHp !== undefined) {
+        this.renderObstacleHp(obs.x, obs.y, obs.width, obs.hp, obs.maxHp);
+      }
+
+      // 可破坏障碍物添加视觉标记（白色边框）
+      if (obs.destructible) {
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+      }
     }
+  }
+
+  private renderObstacleHp(
+    x: number,
+    y: number,
+    width: number,
+    hp: number,
+    maxHp: number
+  ): void {
+    const barWidth = width;
+    const barHeight = 3;
+    const hpPercent = hp / maxHp;
+
+    // 背景
+    this.ctx.fillStyle = "#333";
+    this.ctx.fillRect(x, y - 6, barWidth, barHeight);
+
+    // 血条
+    this.ctx.fillStyle = hpPercent > 0.5 ? "#2ecc71" : "#e74c3c";
+    this.ctx.fillRect(x, y - 6, barWidth * hpPercent, barHeight);
   }
 
   private renderTanks(players: PlayerSnapshot[]): void {

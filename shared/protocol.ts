@@ -119,7 +119,10 @@ export type ObstacleSnapshot = {
   y: number;
   width: number;
   height: number;
-  type?: string; // 障碍物类型：crate / rock / tree，可选（向后兼容）
+  type: "small" | "medium" | "large"; // 障碍物类型
+  destructible: boolean; // 是否可破坏
+  hp?: number; // 当前生命值（可破坏障碍物）
+  maxHp?: number; // 最大生命值（可破坏障碍物）
 };
 
 export type WorldSnapshot = {
@@ -133,6 +136,7 @@ export type WorldSnapshot = {
   obstacles: ObstacleSnapshot[];
   winnerId: string | null;
   isDraw: boolean;
+  mapTheme?: string; // 地图主题：grass_jungle / desert_gobi / snow_tundra / city_ruins
 };
 
 export type PlayerHitEvent = {
@@ -153,6 +157,21 @@ export type GameOverEvent = {
   winnerNickname: string | null;
   isDraw: boolean;
   reason: "last_alive" | "timeout" | "all_disconnected";
+};
+
+// 障碍物被破坏事件
+export type ObstacleDestroyedEvent = {
+  type: "obstacle_destroyed";
+  obstacleId: string;
+  x: number;
+  y: number;
+};
+
+// 障碍物受伤事件
+export type ObstacleHitEvent = {
+  type: "obstacle_hit";
+  obstacleId: string;
+  newHp: number;
 };
 
 export type PongResponse = {
@@ -182,6 +201,8 @@ export type ServerMessage =
   | PlayerHitEvent
   | PlayerEliminatedEvent
   | GameOverEvent
+  | ObstacleDestroyedEvent
+  | ObstacleHitEvent
   | PongResponse
   | RoomListResponse;
 

@@ -236,6 +236,24 @@ export default function Game() {
     audioManager.play("game_over", 0.8);
   });
 
+  // 障碍物被破坏
+  useSocketMessage("obstacle_destroyed", (msg) => {
+    rendererRef.current?.explosions.add(msg.x, msg.y);
+    audioManager.playWithDistance(
+      "explosion",
+      msg.x,
+      msg.y,
+      myPosRef.current.x,
+      myPosRef.current.y,
+      0.5
+    );
+  });
+
+  // 障碍物受伤
+  useSocketMessage("obstacle_hit", (msg) => {
+    audioManager.play("hit", 0.3);
+  });
+
   // 断线检测
   useEffect(() => {
     return gameSocket.onStateChange((state) => {
