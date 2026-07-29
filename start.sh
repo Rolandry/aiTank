@@ -35,15 +35,48 @@ require_command() {
   fi
 }
 
-check_port() {
+list_port_pids() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null || true
+}
+
+# 启动前先检查端口，若已有旧服务在运行则先终止，避免端口占用导致启动失败。
+release_port() {
   local port="$1"
   local service="$2"
-  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-    error "$service 端口 $port 已被占用。"
+  local pids
+  pids="$(list_port_pids "$port")"
+
+  if [[ -z "$pids" ]]; then
+    info "${service}端口 $port 空闲。"
+    return 0
+  fi
+
+  info "检测到${service}端口 $port 已被占用（PID: $(echo "$pids" | tr '\n' ' ')），正在终止旧服务..."
+  # shellcheck disable=SC2086
+  kill $pids 2>/dev/null || true
+
+  local attempts=20
+  while (( attempts > 0 )); do
+    pids="$(list_port_pids "$port")"
+    [[ -z "$pids" ]] && break
+    attempts=$((attempts - 1))
+    sleep 0.25
+  done
+
+  if [[ -n "$pids" ]]; then
+    info "旧${service}进程未响应退出信号，正在强制终止..."
+    # shellcheck disable=SC2086
+    kill -9 $pids 2>/dev/null || true
+    sleep 1
+  fi
+
+  if [[ -n "$(list_port_pids "$port")" ]]; then
+    error "${service}端口 $port 仍被占用，无法启动。"
     lsof -nP -iTCP:"$port" -sTCP:LISTEN >&2 || true
-    error "请停止占用进程，或指定其他端口后重试。"
     exit 1
   fi
+
+  info "旧${service}已停止，端口 $port 已释放。"
 }
 
 install_dependencies() {
@@ -85,8 +118,9 @@ if (( NODE_MAJOR < 18 )); then
   exit 1
 fi
 
-check_port "$SERVER_PORT" "服务端"
-check_port "$CLIENT_PORT" "客户端"
+info "正在检查已运行的游戏服务..."
+release_port "$SERVER_PORT" "服务端"
+release_port "$CLIENT_PORT" "客户端"
 install_dependencies "$SERVER_DIR" "服务端"
 install_dependencies "$CLIENT_DIR" "客户端"
 

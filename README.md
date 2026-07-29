@@ -47,7 +47,8 @@ chmod +x start.sh  # 仅首次需要
 
 脚本会自动完成以下操作：
 
-- 检查 Node.js、npm 和端口占用
+- 检查 Node.js、npm
+- 检查端口占用，自动终止已在运行的旧服务后再启动
 - 首次运行时安装客户端、服务端依赖
 - 同时启动 WebSocket 服务端和 Vite 客户端
 - 浏览器打开 `http://localhost:3000`
