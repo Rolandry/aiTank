@@ -22,30 +22,63 @@ export const SPAWN_POINTS: SpawnPoint[] = [
   { x: 936, y: 680, direction: "up" }, // P4 右下
 ];
 
-type ObstacleSize = "1x1" | "2x1" | "2x2";
+// 地图主题定义
+export type MapTheme = "grass_jungle" | "desert_gobi" | "snow_tundra" | "city_ruins";
+
+interface ThemeConfig {
+  name: string;
+  small: string; // 1x1 可破坏
+  medium: string; // 2x1 可破坏
+  large: string; // 2x2 不可破坏
+}
+
+const THEMES: Record<MapTheme, ThemeConfig> = {
+  grass_jungle: {
+    name: "草地丛林",
+    small: "grass_jungle_tree",
+    medium: "grass_jungle_rock",
+    large: "grass_jungle_crate",
+  },
+  desert_gobi: {
+    name: "荒漠戈壁",
+    small: "desert_gobi_stone",
+    medium: "desert_gobi_ruins",
+    large: "desert_gobi_dune",
+  },
+  snow_tundra: {
+    name: "雪地冰原",
+    small: "snow_tundra_ice",
+    medium: "snow_tundra_snowblock",
+    large: "snow_tundra_crate",
+  },
+  city_ruins: {
+    name: "城市废墟",
+    small: "city_ruins_steel",
+    medium: "city_ruins_wall",
+    large: "city_ruins_barricade",
+  },
+};
+
+type ObstacleSize = "small" | "medium" | "large";
 
 interface ObstacleTemplate {
   type: string;
-  assetKey: string;
   size: ObstacleSize;
   gridW: number;
   gridH: number;
+  destructible: boolean;
+  maxHp: number;
 }
 
-const OBSTACLE_TEMPLATES: ObstacleTemplate[] = [
-  { type: "grass_jungle_tree", assetKey: "obstacle_grass_jungle_tree_1x1", size: "1x1", gridW: 1, gridH: 1 },
-  { type: "grass_jungle_rock", assetKey: "obstacle_grass_jungle_rock_2x1", size: "2x1", gridW: 2, gridH: 1 },
-  { type: "grass_jungle_crate", assetKey: "obstacle_grass_jungle_crate_2x2", size: "2x2", gridW: 2, gridH: 2 },
-  { type: "desert_gobi_stone", assetKey: "obstacle_desert_gobi_stone_1x1", size: "1x1", gridW: 1, gridH: 1 },
-  { type: "desert_gobi_ruins", assetKey: "obstacle_desert_gobi_ruins_2x1", size: "2x1", gridW: 2, gridH: 1 },
-  { type: "desert_gobi_dune", assetKey: "obstacle_desert_gobi_dune_2x2", size: "2x2", gridW: 2, gridH: 2 },
-  { type: "snow_tundra_ice", assetKey: "obstacle_snow_tundra_ice_1x1", size: "1x1", gridW: 1, gridH: 1 },
-  { type: "snow_tundra_snowblock", assetKey: "obstacle_snow_tundra_snowblock_2x1", size: "2x1", gridW: 2, gridH: 1 },
-  { type: "snow_tundra_crate", assetKey: "obstacle_snow_tundra_crate_2x2", size: "2x2", gridW: 2, gridH: 2 },
-  { type: "city_ruins_steel", assetKey: "obstacle_city_ruins_steel_1x1", size: "1x1", gridW: 1, gridH: 1 },
-  { type: "city_ruins_wall", assetKey: "obstacle_city_ruins_wall_2x1", size: "2x1", gridW: 2, gridH: 1 },
-  { type: "city_ruins_barricade", assetKey: "obstacle_city_ruins_barricade_2x2", size: "2x2", gridW: 2, gridH: 2 },
-];
+// 根据主题生成障碍物模板
+function getTemplates(theme: MapTheme): ObstacleTemplate[] {
+  const config = THEMES[theme];
+  return [
+    { type: config.small, size: "small", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
+    { type: config.medium, size: "medium", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
+    { type: config.large, size: "large", gridW: 2, gridH: 2, destructible: false, maxHp: 0 },
+  ];
+}
 
 const MIN_OBSTACLES = 7; // 每象限最少 7 个 → 全图 28 个
 const MAX_OBSTACLES = 10; // 每象限最多 10 个 → 全图 40 个
@@ -58,19 +91,33 @@ interface PlacedObstacle {
   template: ObstacleTemplate;
 }
 
-// 对称镜像生成：在左上 1/4 区域随机生成不同尺寸障碍物，镜像到其余三个象限，保证连通性
-export function generateRandomObstacles(): ObstacleSnapshot[] {
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const quadrant = generateQuadrant();
-    const obstacles = mirrorQuadrant(quadrant);
-    if (checkConnectivity(obstacles)) {
-      return obstacles;
-    }
-  }
-  return [];
+export interface MapData {
+  theme: MapTheme;
+  obstacles: ObstacleSnapshot[];
 }
 
-function generateQuadrant(): PlacedObstacle[] {
+// 生成随机主题
+export function randomTheme(): MapTheme {
+  const themes: MapTheme[] = ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"];
+  return themes[Math.floor(Math.random() * themes.length)];
+}
+
+// 对称镜像生成：在左上 1/4 区域随机生成不同尺寸障碍物，镜像到其余三个象限，保证连通性
+export function generateMap(theme?: MapTheme): MapData {
+  const selectedTheme = theme || randomTheme();
+  const templates = getTemplates(selectedTheme);
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const quadrant = generateQuadrant(templates);
+    const obstacles = mirrorQuadrant(quadrant);
+    if (checkConnectivity(obstacles)) {
+      return { theme: selectedTheme, obstacles };
+    }
+  }
+  return { theme: selectedTheme, obstacles: [] };
+}
+
+function generateQuadrant(templates: ObstacleTemplate[]): PlacedObstacle[] {
   const placed: PlacedObstacle[] = [];
   const occupied = new Set<string>();
 
@@ -79,7 +126,7 @@ function generateQuadrant(): PlacedObstacle[] {
   let attempts = 0;
   while (placed.length < count && attempts < count * 5) {
     attempts++;
-    const template = OBSTACLE_TEMPLATES[Math.floor(Math.random() * OBSTACLE_TEMPLATES.length)];
+    const template = templates[Math.floor(Math.random() * templates.length)];
 
     // 在左上象限内随机选位置，确保整个障碍物能放进象限
     const maxCol = HALF_COLS - template.gridW;
@@ -139,7 +186,10 @@ function mirrorQuadrant(quadrant: PlacedObstacle[]): ObstacleSnapshot[] {
         y: mr * O,
         width: w,
         height: h,
-        type: template.type,
+        type: template.size,
+        destructible: template.destructible,
+        hp: template.destructible ? template.maxHp : undefined,
+        maxHp: template.destructible ? template.maxHp : undefined,
       });
     }
   }

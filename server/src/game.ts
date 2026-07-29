@@ -151,6 +151,11 @@ export class GameWorld {
         continue;
       }
       if (hitsObstacle(rect, this.room.obstacles)) {
+        // 找到被击中的障碍物
+        const hitObstacle = this.findHitObstacle(rect, this.room.obstacles);
+        if (hitObstacle) {
+          this.handleBulletHitObstacle(b, hitObstacle);
+        }
         toRemove.push(b.bulletId);
         continue;
       }
@@ -165,6 +170,59 @@ export class GameWorld {
     }
 
     for (const id of toRemove) this.removeBullet(id);
+  }
+
+  private findHitObstacle(
+    rect: { x: number; y: number; width: number; height: number },
+    obstacles: typeof this.room.obstacles
+  ) {
+    for (const obs of obstacles) {
+      if (
+        rect.x < obs.x + obs.width &&
+        rect.x + rect.width > obs.x &&
+        rect.y < obs.y + obs.height &&
+        rect.y + rect.height > obs.y
+      ) {
+        return obs;
+      }
+    }
+    return null;
+  }
+
+  private handleBulletHitObstacle(
+    bullet: ServerBullet,
+    obstacle: (typeof this.room.obstacles)[0]
+  ): void {
+    if (!obstacle.destructible) {
+      // 不可破坏：子弹消失，障碍物无损
+      return;
+    }
+
+    // 可破坏：扣血
+    obstacle.hp = Math.max(0, (obstacle.hp ?? 1) - 1);
+
+    if (obstacle.hp <= 0) {
+      // 摧毁：从列表中移除并广播
+      const index = this.room.obstacles.findIndex(
+        (o) => o.obstacleId === obstacle.obstacleId
+      );
+      if (index !== -1) {
+        this.room.obstacles.splice(index, 1);
+      }
+      this.room.broadcast({
+        type: "obstacle_destroyed",
+        obstacleId: obstacle.obstacleId,
+        x: obstacle.x + obstacle.width / 2,
+        y: obstacle.y + obstacle.height / 2,
+      });
+    } else {
+      // 受伤：广播受伤事件
+      this.room.broadcast({
+        type: "obstacle_hit",
+        obstacleId: obstacle.obstacleId,
+        newHp: obstacle.hp,
+      });
+    }
   }
 
   private removeBullet(id: string): void {
@@ -266,6 +324,7 @@ export class GameWorld {
       obstacles: this.room.obstacles,
       winnerId: this.room.winnerId,
       isDraw: this.room.isDraw,
+      mapTheme: this.room.mapTheme,
     };
   }
 }

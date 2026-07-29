@@ -7,7 +7,7 @@ import type {
   RoomListItem,
   ServerMessage,
 } from "./protocol";
-import { generateRandomObstacles } from "./map";
+import { generateMap, type MapTheme } from "./map";
 import { GameWorld } from "./game";
 import type { RoomStatus, ServerPlayer } from "./types";
 
@@ -24,6 +24,7 @@ export class Room {
   winnerId: string | null = null;
   isDraw = false;
   obstacles: ObstacleSnapshot[] = []; // 开局时随机生成
+  mapTheme: MapTheme = "grass_jungle"; // 地图主题
   private countdownTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -129,7 +130,9 @@ export class Room {
 
   private beginPlay(): void {
     this.status = "playing";
-    this.obstacles = generateRandomObstacles(); // 每局随机地图
+    const mapData = generateMap(); // 生成随机主题地图
+    this.mapTheme = mapData.theme;
+    this.obstacles = mapData.obstacles;
     this.game = new GameWorld(this);
     this.game.start();
     this.broadcast({ type: "countdown", seconds: 0 });
