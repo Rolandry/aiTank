@@ -32,6 +32,10 @@ export type ShootRequest = {
   type: "shoot";
 };
 
+export type DashRequest = {
+  type: "dash";
+};
+
 export type PingRequest = {
   type: "ping";
   timestamp?: number;
@@ -48,6 +52,7 @@ export type ClientMessage =
   | StartGameRequest
   | PlayerInput
   | ShootRequest
+  | DashRequest
   | PingRequest
   | ListRoomsRequest;
 
@@ -94,6 +99,38 @@ export type CountdownEvent = {
   seconds: number;
 };
 
+// 技能球分类与具体效果
+export type PowerupCategory = "status" | "recovery" | "offense";
+
+export type PowerupType =
+  | "shrink"
+  | "speed"
+  | "shield"
+  | "ghost"
+  | "swift_dash"
+  | "heal"
+  | "rapid"
+  | "bigshot"
+  | "spread"
+  | "pierce"
+  | "ricochet"
+  | "power_shot";
+
+export type PowerupSnapshot = {
+  powerupId: string;
+  type: PowerupType;
+  category: PowerupCategory;
+  x: number;
+  y: number;
+  size: number;
+};
+
+// 玩家身上生效中的效果及剩余时间
+export type ActiveEffect = {
+  type: PowerupType;
+  remainingMs: number;
+};
+
 export type PlayerSnapshot = {
   playerId: string;
   nickname: string;
@@ -104,6 +141,10 @@ export type PlayerSnapshot = {
   hp: number;
   alive: boolean;
   hitCount: number;
+  size: number; // 当前碰撞尺寸，受 shrink 影响
+  shield: number; // 剩余护盾点数
+  effects: ActiveEffect[];
+  dashCooldownMs: number; // 冲刺剩余冷却
 };
 
 export type BulletSnapshot = {
@@ -112,6 +153,8 @@ export type BulletSnapshot = {
   x: number;
   y: number;
   direction: "up" | "down" | "left" | "right";
+  size: number; // 当前子弹尺寸，受 bigshot 影响
+  damage: number; // 命中伤害，受 power_shot 影响
 };
 
 export type ObstacleSnapshot = {
@@ -136,6 +179,7 @@ export type WorldSnapshot = {
   players: PlayerSnapshot[];
   bullets: BulletSnapshot[];
   obstacles: ObstacleSnapshot[];
+  powerups: PowerupSnapshot[];
   winnerId: string | null;
   isDraw: boolean;
   mapTheme?: string; // 地图主题：grass_jungle / desert_gobi / snow_tundra / city_ruins
@@ -176,6 +220,33 @@ export type ObstacleHitEvent = {
   newHp: number;
 };
 
+// 技能球生成事件
+export type PowerupSpawnedEvent = {
+  type: "powerup_spawned";
+  powerup: PowerupSnapshot;
+};
+
+// 技能球拾取事件
+export type PowerupCollectedEvent = {
+  type: "powerup_collected";
+  powerupId: string;
+  playerId: string;
+  powerupType: PowerupType;
+  category: PowerupCategory;
+  x: number;
+  y: number;
+};
+
+// 冲刺事件（供客户端播放特效）
+export type DashEvent = {
+  type: "dash";
+  playerId: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+};
+
 export type PongResponse = {
   type: "pong";
   timestamp?: number;
@@ -207,6 +278,9 @@ export type ServerMessage =
   | GameOverEvent
   | ObstacleDestroyedEvent
   | ObstacleHitEvent
+  | PowerupSpawnedEvent
+  | PowerupCollectedEvent
+  | DashEvent
   | PongResponse
   | RoomListResponse;
 
@@ -230,7 +304,32 @@ export const GAME_CONFIG = {
   hitFlashDurationMs: 200,
   explosionFrameCount: 4,
   explosionFrameDurationMs: 100,
+  // 技能机制
+  dashCells: 3, // 冲刺格数
+  dashCooldownMs: 20000,
+  powerupSize: 32,
+  powerupSpawnIntervalMs: 8000,
+  maxPowerups: 4,
 } as const;
+
+// 技能球配置：持续时间为 0 表示立即结算
+export const POWERUP_CONFIG: Record<
+  PowerupType,
+  { category: PowerupCategory; durationMs: number; label: string; color: string }
+> = {
+  shrink: { category: "status", durationMs: 12000, label: "缩小", color: "#7fd1ff" },
+  speed: { category: "status", durationMs: 10000, label: "加速", color: "#8affc1" },
+  shield: { category: "status", durationMs: 15000, label: "护盾", color: "#c9b6ff" },
+  ghost: { category: "status", durationMs: 8000, label: "穿林", color: "#b6e3ff" },
+  swift_dash: { category: "status", durationMs: 15000, label: "疾冲", color: "#9fe8ff" },
+  heal: { category: "recovery", durationMs: 0, label: "治疗", color: "#ff8f9c" },
+  rapid: { category: "offense", durationMs: 10000, label: "连射", color: "#ffd166" },
+  bigshot: { category: "offense", durationMs: 10000, label: "巨弹", color: "#ffb347" },
+  spread: { category: "offense", durationMs: 10000, label: "散射", color: "#ffa07a" },
+  pierce: { category: "offense", durationMs: 10000, label: "穿透", color: "#ff9f45" },
+  ricochet: { category: "offense", durationMs: 10000, label: "反弹", color: "#ffc93c" },
+  power_shot: { category: "offense", durationMs: 8000, label: "强袭", color: "#ff7b54" },
+};
 
 export const PLAYER_COLORS = ["red", "blue", "green", "yellow"] as const;
 export type PlayerColor = (typeof PLAYER_COLORS)[number];

@@ -16,7 +16,7 @@ const keyState: KeyState = {
 
 let isEnabled = false;
 
-const KEY_MAP: Record<string, keyof KeyState | "shoot"> = {
+const KEY_MAP: Record<string, keyof KeyState | "shoot" | "dash"> = {
   w: "up",
   W: "up",
   ArrowUp: "up",
@@ -30,6 +30,7 @@ const KEY_MAP: Record<string, keyof KeyState | "shoot"> = {
   D: "right",
   ArrowRight: "right",
   " ": "shoot",
+  Shift: "dash",
 };
 
 export function initInput(): void {
@@ -66,6 +67,12 @@ function handleKeyDown(e: KeyboardEvent): void {
     return;
   }
 
+  if (key === "dash") {
+    // 长按 Shift 会连续触发 keydown，服务端冷却会忽略多余请求
+    if (!e.repeat) gameSocket.send({ type: "dash" });
+    return;
+  }
+
   if (!keyState[key]) {
     keyState[key] = true;
     sendInput();
@@ -75,7 +82,7 @@ function handleKeyDown(e: KeyboardEvent): void {
 function handleKeyUp(e: KeyboardEvent): void {
   if (!isEnabled) return;
   const key = KEY_MAP[e.key];
-  if (!key || key === "shoot") return;
+  if (!key || key === "shoot" || key === "dash") return;
 
   e.preventDefault();
   keyState[key] = false;

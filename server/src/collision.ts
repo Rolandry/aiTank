@@ -21,17 +21,23 @@ export function aabbOverlap(a: Rect, b: Rect): boolean {
 const T = GAME_CONFIG.tankSize; // 48
 const B = GAME_CONFIG.bulletSize; // 12
 
-// 玩家/子弹快照的 x,y 是中心坐标，换算为 AABB
-export function tankRect(cx: number, cy: number): Rect {
-  return { x: cx - T / 2, y: cy - T / 2, width: T, height: T };
+// 玩家/子弹快照的 x,y 是中心坐标，换算为 AABB。
+// 尺寸可变：shrink 缩小坦克、bigshot 放大子弹时判定同步变化。
+export function tankRect(cx: number, cy: number, size: number = T): Rect {
+  return { x: cx - size / 2, y: cy - size / 2, width: size, height: size };
 }
 
-export function bulletRect(cx: number, cy: number): Rect {
-  return { x: cx - B / 2, y: cy - B / 2, width: B, height: B };
+export function bulletRect(cx: number, cy: number, size: number = B): Rect {
+  return { x: cx - size / 2, y: cy - size / 2, width: size, height: size };
 }
 
 export function hitsObstacle(rect: Rect, obstacles: ObstacleSnapshot[]): boolean {
   return obstacles.some((o) => aabbOverlap(rect, o));
+}
+
+// ghost 效果下只阻挡不可破坏墙体，可穿越可破坏障碍物。
+export function hitsSolidObstacle(rect: Rect, obstacles: ObstacleSnapshot[]): boolean {
+  return obstacles.some((o) => !o.destructible && aabbOverlap(rect, o));
 }
 
 export function insideMap(rect: Rect): boolean {

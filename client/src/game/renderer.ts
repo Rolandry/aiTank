@@ -1,8 +1,9 @@
-import { GAME_CONFIG } from "../types/protocol";
+import { GAME_CONFIG, POWERUP_CONFIG } from "../types/protocol";
 import type {
   WorldSnapshot,
   PlayerSnapshot,
   BulletSnapshot,
+  PowerupSnapshot,
 } from "../types/protocol";
 import { getAsset, FALLBACK_COLORS } from "./assets";
 import { ExplosionManager } from "./explosion";
@@ -52,6 +53,7 @@ export class GameRenderer {
   render(snapshot: WorldSnapshot): void {
     this.clear(snapshot.mapTheme);
     this.renderObstacles(snapshot.obstacles);
+    this.renderPowerups(snapshot.powerups ?? []);
     this.renderTanks(snapshot.players);
     this.renderBullets(snapshot.bullets);
     this.explosions.render(this.ctx);
@@ -162,12 +164,45 @@ export class GameRenderer {
     this.ctx.fillRect(x, y - 6, barWidth * hpPercent, barHeight);
   }
 
+  // 技能球：脉动光环 + 分类颜色 + 效果首字
+  private renderPowerups(powerups: PowerupSnapshot[]): void {
+    const pulse = 0.85 + Math.sin(Date.now() / 220) * 0.15;
+
+    for (const powerup of powerups) {
+      const config = POWERUP_CONFIG[powerup.type];
+      const radius = (powerup.size / 2) * pulse;
+
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.arc(powerup.x, powerup.y, radius + 4, 0, Math.PI * 2);
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.arc(powerup.x, powerup.y, radius, 0, Math.PI * 2);
+      this.ctx.fillStyle = config?.color ?? "#ffffff";
+      this.ctx.fill();
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+      this.ctx.stroke();
+
+      this.ctx.font = "bold 12px Arial";
+      this.ctx.fillStyle = "#1b1b1b";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.fillText(config?.label.slice(0, 1) ?? "?", powerup.x, powerup.y);
+      this.ctx.restore();
+      this.ctx.textBaseline = "alphabetic";
+    }
+  }
+
   private renderTanks(players: PlayerSnapshot[]): void {
     for (const player of players) {
       if (!player.alive) continue;
 
       const isMe = player.playerId === this.myPlayerId;
-      const size = GAME_CONFIG.tankSize;
+      // 尺寸由服务端下发，shrink 时与碰撞体积一致
+      const size = player.size ?? GAME_CONFIG.tankSize;
       const x = player.x - size / 2;
       const y = player.y - size / 2;
 
@@ -197,6 +232,17 @@ export class GameRenderer {
         this.ctx.fillRect(x, y, size, size);
       }
 
+      // 护盾环
+      if (player.shield > 0) {
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(player.x, player.y, size / 2 + 6, 0, Math.PI * 2);
+        this.ctx.strokeStyle = "rgba(201, 182, 255, 0.9)";
+        this.ctx.lineWidth = 3;
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
+
       // 本地玩家白色描边
       if (isMe) {
         this.ctx.strokeStyle = "#fff";
@@ -204,17 +250,16 @@ export class GameRenderer {
         this.ctx.strokeRect(x - 2, y - 2, size + 4, size + 4);
       }
 
-      this.renderPlayerInfo(player, x, y);
+      this.renderPlayerInfo(player, x, y, size);
     }
   }
 
   private renderPlayerInfo(
     player: PlayerSnapshot,
     x: number,
-    y: number
+    y: number,
+    size: number
   ): void {
-    const size = GAME_CONFIG.tankSize;
-
     // 昵称
     this.ctx.font = "12px Arial";
     this.ctx.fillStyle = "#fff";
@@ -233,13 +278,24 @@ export class GameRenderer {
     this.ctx.fillStyle =
       hpPercent > 0.5 ? "#2ecc71" : hpPercent > 0.25 ? "#f39c12" : "#e74c3c";
     this.ctx.fillRect(x, y - 12, barWidth * hpPercent, barHeight);
+
+    // 生效中的效果小点
+    const effects = player.effects ?? [];
+    effects.forEach((effect, index) => {
+      const config = POWERUP_CONFIG[effect.type];
+      this.ctx.fillStyle = config?.color ?? "#fff";
+      this.ctx.beginPath();
+      this.ctx.arc(x + 4 + index * 8, y - 24, 3, 0, Math.PI * 2);
+      this.ctx.fill();
+    });
   }
 
   private renderBullets(bullets: BulletSnapshot[]): void {
     const img = getAsset("bullet");
-    const size = GAME_CONFIG.bulletSize;
 
     for (const bullet of bullets) {
+      // 尺寸由服务端下发，bigshot 时与碰撞体积一致
+      const size = bullet.size ?? GAME_CONFIG.bulletSize;
       const x = bullet.x - size / 2;
       const y = bullet.y - size / 2;
 
@@ -250,6 +306,15 @@ export class GameRenderer {
         this.ctx.beginPath();
         this.ctx.arc(bullet.x, bullet.y, size / 2, 0, Math.PI * 2);
         this.ctx.fill();
+      }
+
+      // 强袭弹附加光晕
+      if (bullet.damage > 1) {
+        this.ctx.strokeStyle = "rgba(255, 123, 84, 0.9)";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(bullet.x, bullet.y, size / 2 + 3, 0, Math.PI * 2);
+        this.ctx.stroke();
       }
     }
   }
@@ -270,5 +335,39 @@ export class GameRenderer {
       GAME_CONFIG.mapWidth - 10,
       25
     );
+
+    this.renderSkillHUD(snapshot);
+  }
+
+  // 左下角：冲刺冷却与自身生效效果
+  private renderSkillHUD(snapshot: WorldSnapshot): void {
+    const me = snapshot.players.find((p) => p.playerId === this.myPlayerId);
+    if (!me) return;
+
+    const baseY = GAME_CONFIG.mapHeight - 16;
+    const cooldown = me.dashCooldownMs ?? 0;
+
+    this.ctx.font = "bold 14px Arial";
+    this.ctx.textAlign = "left";
+    this.ctx.fillStyle = cooldown > 0 ? "#9aa0a6" : "#8affc1";
+    this.ctx.fillText(
+      cooldown > 0
+        ? `冲刺（Shift）${(cooldown / 1000).toFixed(1)}s`
+        : "冲刺（Shift）就绪",
+      12,
+      baseY
+    );
+
+    const effects = me.effects ?? [];
+    effects.forEach((effect, index) => {
+      const config = POWERUP_CONFIG[effect.type];
+      this.ctx.fillStyle = config?.color ?? "#fff";
+      this.ctx.font = "12px Arial";
+      this.ctx.fillText(
+        `${config?.label ?? effect.type} ${Math.ceil(effect.remainingMs / 1000)}s`,
+        12 + index * 78,
+        baseY - 20
+      );
+    });
   }
 }

@@ -1,4 +1,5 @@
 import type { WebSocket } from "ws";
+import type { PowerupType } from "./protocol";
 
 export type Direction = "up" | "down" | "left" | "right";
 export type RoomStatus = "waiting" | "countdown" | "playing" | "finished";
@@ -26,6 +27,9 @@ export interface ServerPlayer {
   input: InputState;
   lastInputSeq: number;
   connected: boolean;
+  effects: Map<PowerupType, number>; // 效果 → 到期时间戳
+  shield: number;
+  lastDashTime: number;
 }
 
 export interface ServerBullet {
@@ -34,6 +38,17 @@ export interface ServerBullet {
   x: number;
   y: number;
   direction: Direction;
+  size: number;
+  damage: number;
+  pierce: boolean;
+  bouncesLeft: number;
+}
+
+export interface ServerPowerup {
+  powerupId: string;
+  type: PowerupType;
+  x: number;
+  y: number;
 }
 
 // 每个 WS 连接的上下文（playerId 一连接一个，直接复用为玩家 ID）

@@ -153,6 +153,14 @@ function handleMessage(
       return;
     }
 
+    case "dash": {
+      if (!ctx.roomId || ctx.isSpectator) return;
+      const room = manager.getRoom(ctx.roomId);
+      const player = room?.players.get(ctx.playerId);
+      if (room?.game && player) room.game.handleDash(player);
+      return;
+    }
+
     default: {
       console.warn(`[ws] 未知消息类型: ${(msg as { type: string }).type}`);
       send(ws, {

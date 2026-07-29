@@ -195,6 +195,31 @@ export default function Game() {
     audioManager.play("hit", 0.3);
   });
 
+  // 技能球拾取：播放距离衰减音效并在拾取点显示特效
+  useSocketMessage("powerup_collected", (msg) => {
+    rendererRef.current?.explosions.add(msg.x, msg.y);
+    audioManager.playWithDistance(
+      "hit",
+      msg.x,
+      msg.y,
+      myPosRef.current.x,
+      myPosRef.current.y,
+      0.4
+    );
+  });
+
+  // 冲刺：播放音效
+  useSocketMessage("dash", (msg) => {
+    audioManager.playWithDistance(
+      "shoot",
+      msg.toX,
+      msg.toY,
+      myPosRef.current.x,
+      myPosRef.current.y,
+      0.3
+    );
+  });
+
   // 断线检测
   useEffect(() => {
     return gameSocket.onStateChange((state) => {

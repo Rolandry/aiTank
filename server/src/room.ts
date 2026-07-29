@@ -53,6 +53,9 @@ export class Room {
       input: { up: false, down: false, left: false, right: false },
       lastInputSeq: 0,
       connected: true,
+      effects: new Map(),
+      shield: 0,
+      lastDashTime: 0,
     };
     this.players.set(playerId, player);
     if (!this.hostId) this.hostId = playerId;
