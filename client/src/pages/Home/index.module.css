@@ -7,11 +7,12 @@
   background: #1a1a2e;
   color: #fff;
   font-family: Arial, sans-serif;
+  padding: 20px;
 }
 
 .title {
   font-size: 48px;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
   color: #f1c40f;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -21,6 +22,7 @@
   flex-direction: column;
   gap: 16px;
   width: 320px;
+  margin-bottom: 32px;
 }
 
 .input {
@@ -44,13 +46,8 @@
   text-align: center;
 }
 
-.buttons {
-  display: flex;
-  gap: 12px;
-}
-
-.button {
-  flex: 1;
+.createButton {
+  width: 100%;
   padding: 12px 24px;
   font-size: 16px;
   border: none;
@@ -62,11 +59,93 @@
   transition: background 0.2s;
 }
 
-.button:hover:not(:disabled) {
+.createButton:hover:not(:disabled) {
   background: #f39c12;
 }
 
-.button:disabled {
+.createButton:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.roomListSection {
+  width: 420px;
+  max-width: 90vw;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #aaa;
+  text-align: left;
+}
+
+.emptyHint {
+  text-align: center;
+  color: #666;
+  font-size: 15px;
+  padding: 32px 0;
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.roomCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #16213e;
+  border-radius: 8px;
+  border: 1px solid #2a2a4a;
+  transition: border-color 0.2s;
+}
+
+.roomCard:hover {
+  border-color: #f1c40f;
+}
+
+.roomInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roomHost {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.roomCount {
+  font-size: 13px;
+  color: #888;
+}
+
+.joinButton {
+  padding: 8px 24px;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  background: #2ecc71;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.joinButton:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.joinButton:disabled {
+  background: #555;
+  opacity: 0.6;
   cursor: not-allowed;
 }

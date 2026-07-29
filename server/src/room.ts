@@ -4,6 +4,7 @@ import type {
   LobbyUpdate,
   ObstacleSnapshot,
   PlayerInfo,
+  RoomListItem,
   ServerMessage,
 } from "./protocol";
 import { generateRandomObstacles } from "./map";
@@ -216,6 +217,18 @@ export class RoomManager {
 
   getRoom(roomId: string): Room | undefined {
     return this.rooms.get(roomId);
+  }
+
+  listRooms(): RoomListItem[] {
+    return [...this.rooms.values()]
+      .filter((r) => r.status === "waiting")
+      .map((r) => ({
+        roomId: r.roomId,
+        hostNickname: r.players.get(r.hostId)?.nickname ?? "未知",
+        playerCount: r.players.size,
+        maxPlayers: GAME_CONFIG.maxPlayers,
+        status: r.status,
+      }));
   }
 
   // 返回值表示加入结果，供入口层绑定连接上下文

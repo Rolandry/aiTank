@@ -36,6 +36,10 @@ export type PingRequest = {
   type: "ping";
 };
 
+export type ListRoomsRequest = {
+  type: "list_rooms";
+};
+
 export type ClientMessage =
   | CreateRoomRequest
   | JoinRoomRequest
@@ -43,7 +47,8 @@ export type ClientMessage =
   | StartGameRequest
   | PlayerInput
   | ShootRequest
-  | PingRequest;
+  | PingRequest
+  | ListRoomsRequest;
 
 // ── 服务端 → 客户端 ──
 
@@ -154,6 +159,19 @@ export type PongResponse = {
   type: "pong";
 };
 
+export type RoomListItem = {
+  roomId: string;
+  hostNickname: string;
+  playerCount: number;
+  maxPlayers: number;
+  status: "waiting" | "countdown" | "playing" | "finished";
+};
+
+export type RoomListResponse = {
+  type: "room_list";
+  rooms: RoomListItem[];
+};
+
 export type ServerMessage =
   | RoomCreatedResponse
   | RoomJoinedResponse
@@ -164,7 +182,8 @@ export type ServerMessage =
   | PlayerHitEvent
   | PlayerEliminatedEvent
   | GameOverEvent
-  | PongResponse;
+  | PongResponse
+  | RoomListResponse;
 
 // ── 游戏常量 ──
 

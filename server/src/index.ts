@@ -65,6 +65,11 @@ function handleMessage(
       send(ws, { type: "pong" });
       return;
 
+    case "list_rooms": {
+      send(ws, { type: "room_list", rooms: manager.listRooms() });
+      return;
+    }
+
     case "create_room": {
       if (ctx.roomId) return;
       if (!validNickname(msg.nickname)) {

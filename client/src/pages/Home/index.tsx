@@ -1,14 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { gameSocket } from "../../network/socket";
+import { gameSocket, ConnectionState } from "../../network/socket";
+import type { RoomListItem } from "../../types/protocol";
 import styles from "./index.module.css";
 
 export default function Home() {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
-  const [roomId, setRoomId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rooms, setRooms] = useState<RoomListItem[]>([]);
+  const [connected, setConnected] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchRooms = useCallback(() => {
+    if (gameSocket.isConnected()) {
+      gameSocket.send({ type: "list_rooms" });
+    }
+  }, []);
+
+  useEffect(() => {
+    gameSocket.connect().then(() => {
+      setConnected(true);
+      fetchRooms();
+    }).catch(() => {
+      setError("无法连接到服务器");
+    });
+
+    const unsubRoomList = gameSocket.on("room_list", (msg) => {
+      setRooms(msg.rooms);
+    });
+
+    const unsubState = gameSocket.onStateChange((state) => {
+      if (state === ConnectionState.CONNECTED) {
+        setConnected(true);
+        fetchRooms();
+      } else if (state === ConnectionState.DISCONNECTED) {
+        setConnected(false);
+      }
+    });
+
+    pollTimerRef.current = setInterval(fetchRooms, 2000);
+
+    return () => {
+      unsubRoomList();
+      unsubState();
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, [fetchRooms]);
 
   const validate = (): boolean => {
     if (nickname.length < 1 || nickname.length > 12) {
@@ -31,9 +70,10 @@ export default function Home() {
           state: { playerId: msg.playerId, nickname, isHost: true },
         });
       });
-      gameSocket.on("room_error", (msg) => {
+      const unsubError = gameSocket.on("room_error", (msg) => {
         setError(msg.message);
         setLoading(false);
+        unsubError();
       });
       gameSocket.send({ type: "create_room", nickname });
     } catch {
@@ -42,12 +82,8 @@ export default function Home() {
     }
   };
 
-  const handleJoin = async () => {
+  const handleJoin = async (roomId: string) => {
     if (!validate()) return;
-    if (!/^[A-Z0-9]{4}$/.test(roomId)) {
-      setError("房间号应为 4 位大写字母或数字");
-      return;
-    }
     setLoading(true);
     setError("");
 
@@ -65,9 +101,10 @@ export default function Home() {
           });
         }
       });
-      gameSocket.on("room_error", (msg) => {
+      const unsubError = gameSocket.on("room_error", (msg) => {
         setError(msg.message);
         setLoading(false);
+        unsubError();
       });
       gameSocket.send({ type: "join_room", nickname, roomId });
     } catch {
@@ -88,31 +125,47 @@ export default function Home() {
           maxLength={12}
           className={styles.input}
         />
-        <input
-          type="text"
-          placeholder="输入房间号（4 位）"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-          maxLength={4}
-          className={styles.input}
-        />
         {error && <div className={styles.error}>{error}</div>}
-        <div className={styles.buttons}>
-          <button
-            onClick={handleCreate}
-            disabled={loading}
-            className={styles.button}
-          >
-            创建房间
-          </button>
-          <button
-            onClick={handleJoin}
-            disabled={loading}
-            className={styles.button}
-          >
-            加入房间
-          </button>
-        </div>
+        <button
+          onClick={handleCreate}
+          disabled={loading || !connected}
+          className={styles.createButton}
+        >
+          创建房间
+        </button>
+      </div>
+
+      <div className={styles.roomListSection}>
+        <h2 className={styles.sectionTitle}>
+          可用房间 {connected ? "" : "（连接中...）"}
+        </h2>
+        {rooms.length === 0 ? (
+          <div className={styles.emptyHint}>
+            {connected ? "暂无可用房间，创建一个吧！" : "正在连接服务器..."}
+          </div>
+        ) : (
+          <div className={styles.roomList}>
+            {rooms.map((room) => (
+              <div key={room.roomId} className={styles.roomCard}>
+                <div className={styles.roomInfo}>
+                  <span className={styles.roomHost}>
+                    {room.hostNickname}的房间
+                  </span>
+                  <span className={styles.roomCount}>
+                    {room.playerCount}/{room.maxPlayers}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleJoin(room.roomId)}
+                  disabled={loading || room.playerCount >= room.maxPlayers}
+                  className={styles.joinButton}
+                >
+                  {room.playerCount >= room.maxPlayers ? "已满" : "加入"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
