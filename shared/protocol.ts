@@ -289,7 +289,7 @@ export type ServerMessage =
 export const GAME_CONFIG = {
   mapWidth: 1024,
   mapHeight: 768,
-  tankSize: 48,
+  tankSize: 38, // 原 48 的 80%，便于进入 1 格宽窄道
   tankAssetSize: 64,
   bulletSize: 12,
   bulletAssetSize: 16,
@@ -308,8 +308,8 @@ export const GAME_CONFIG = {
   dashCells: 3, // 冲刺格数
   dashCooldownMs: 20000,
   powerupSize: 32,
-  powerupSpawnIntervalMs: 8000,
-  maxPowerups: 4,
+  powerupSpawnIntervalMs: 5000,
+  maxPowerups: 6,
 } as const;
 
 // 技能球配置：持续时间为 0 表示立即结算

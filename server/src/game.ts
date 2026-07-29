@@ -102,8 +102,9 @@ export class GameWorld {
   }
 
   private tankSize(player: ServerPlayer): number {
+    // 基准尺寸已缩小，缩小比例相应放宽，避免坦克过小失真
     return this.hasEffect(player, "shrink")
-      ? Math.round(GAME_CONFIG.tankSize * 0.7)
+      ? Math.round(GAME_CONFIG.tankSize * 0.75)
       : GAME_CONFIG.tankSize;
   }
 
