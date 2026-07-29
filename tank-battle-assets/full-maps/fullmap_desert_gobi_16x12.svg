@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" shape-rendering="crispEdges">
+  <!-- 荒漠戈壁 16×12 完整地图 · 512×384px -->
+  
+  <!-- 基础地面 -->
+  <rect width="512" height="384" fill="#F4D68E"/>
+  
+  <!-- 地面纹理层 - 沙漠色调 -->
+  <rect x="0" y="0" width="512" height="6" fill="#E8C878"/>
+  <rect x="0" y="378" width="512" height="6" fill="#D4B46E"/>
+  <rect x="0" y="0" width="6" height="384" fill="#E8C878"/>
+  <rect x="506" y="0" width="6" height="384" fill="#D4B46E"/>
+  
+  <!-- 沙漠纹理 - 沙丘轮廓 -->
+  <rect x="32" y="40" width="64" height="16" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="120" y="64" width="80" height="20" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="240" y="48" width="72" height="18" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="360" y="80" width="88" height="22" fill="#FFF3CD" opacity="0.6"/>
+  
+  <rect x="64" y="136" width="96" height="24" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="200" y="160" width="104" height="20" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="344" y="144" width="80" height="18" fill="#FFF3CD" opacity="0.6"/>
+  
+  <rect x="48" y="232" width="88" height="22" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="176" y="256" width="112" height="24" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="320" y="240" width="96" height="20" fill="#FFF3CD" opacity="0.6"/>
+  
+  <rect x="80" y="320" width="72" height="18" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="208" y="336" width="80" height="20" fill="#FFF3CD" opacity="0.6"/>
+  <rect x="344" y="312" width="88" height="22" fill="#FFF3CD" opacity="0.6"/>
+  
+  <!-- 沙粒细节点缀 -->
+  <rect x="24" y="20" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="72" y="48" width="10" height="10" fill="#E8C878"/>
+  <rect x="136" y="32" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="184" y="72" width="10" height="10" fill="#E8C878"/>
+  <rect x="248" y="96" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="304" y="88" width="10" height="10" fill="#E8C878"/>
+  <rect x="368" y="112" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="424" y="128" width="10" height="10" fill="#E8C878"/>
+  <rect x="480" y="144" width="10" height="10" fill="#FFF3CD"/>
+  
+  <rect x="40" y="168" width="10" height="10" fill="#E8C878"/>
+  <rect x="104" y="192" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="160" y="184" width="10" height="10" fill="#E8C878"/>
+  <rect x="224" y="208" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="288" y="216" width="10" height="10" fill="#E8C878"/>
+  <rect x="344" y="200" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="408" y="184" width="10" height="10" fill="#E8C878"/>
+  <rect x="464" y="208" width="10" height="10" fill="#FFF3CD"/>
+  
+  <rect x="56" y="272" width="10" height="10" fill="#E8C878"/>
+  <rect x="120" y="296" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="184" y="288" width="10" height="10" fill="#E8C878"/>
+  <rect x="240" y="312" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="296" y="320" width="10" height="10" fill="#E8C878"/>
+  <rect x="360" y="304" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="416" y="288" width="10" height="10" fill="#E8C878"/>
+  <rect x="472" y="312" width="10" height="10" fill="#FFF3CD"/>
+  
+  <rect x="32" y="360" width="10" height="10" fill="#E8C878"/>
+  <rect x="96" y="368" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="152" y="356" width="10" height="10" fill="#E8C878"/>
+  <rect x="216" y="372" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="272" y="352" width="10" height="10" fill="#E8C878"/>
+  <rect x="336" y="364" width="10" height="10" fill="#FFF3CD"/>
+  <rect x="392" y="344" width="10" height="10" fill="#E8C878"/>
+  <rect x="456" y="368" width="10" height="10" fill="#FFF3CD"/>
+  
+  <!-- 小石块点缀 -->
+  <rect x="144" y="120" width="6" height="6" fill="#D4B46E"/>
+  <rect x="272" y="152" width="6" height="6" fill="#D4B46E"/>
+  <rect x="192" y="224" width="6" height="6" fill="#D4B46E"/>
+  <rect x="384" y="264" width="6" height="6" fill="#D4B46E"/>
+  <rect x="128" y="336" width="6" height="6" fill="#D4B46E"/>
+</svg>

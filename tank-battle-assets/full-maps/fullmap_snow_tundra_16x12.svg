@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" shape-rendering="crispEdges">
+  <!-- 雪地冰原 16×12 完整地图 · 512×384px -->
+  
+  <!-- 基础地面 - 纯白 -->
+  <rect width="512" height="384" fill="#FFFFFF"/>
+  
+  <!-- 浅灰色边缘阴影 -->
+  <rect x="0" y="0" width="512" height="3" fill="#FAFAFA"/>
+  <rect x="0" y="381" width="512" height="3" fill="#F5F5F5"/>
+  <rect x="0" y="0" width="3" height="384" fill="#FAFAFA"/>
+  <rect x="509" y="0" width="3" height="384" fill="#F5F5F5"/>
+  
+  <!-- 雪地纹理 - 积雪波纹 -->
+  <rect x="48" y="24" width="80" height="12" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="152" y="48" width="96" height="14" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="280" y="32" width="104" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="408" y="64" width="80" height="12" fill="#FAFAFA" opacity="0.8"/>
+  
+  <rect x="32" y="104" width="112" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="168" y="120" width="88" height="14" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="288" y="112" width="96" height="18" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="416" y="136" width="72" height="12" fill="#FAFAFA" opacity="0.8"/>
+  
+  <rect x="56" y="184" width="104" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="192" y="200" width="120" height="14" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="336" y="192" width="88" height="18" fill="#FAFAFA" opacity="0.8"/>
+  
+  <rect x="40" y="264" width="96" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="168" y="280" width="104" height="14" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="304" y="272" width="112" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="440" y="288" width="64" height="12" fill="#FAFAFA" opacity="0.8"/>
+  
+  <rect x="64" y="336" width="88" height="14" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="184" y="352" width="96" height="16" fill="#FAFAFA" opacity="0.8"/>
+  <rect x="312" y="344" width="104" height="14" fill="#FAFAFA" opacity="0.8"/>
+  
+  <!-- 雪花点缀 -->
+  <rect x="20" y="16" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="88" y="56" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="144" y="80" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="216" y="96" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="272" y="72" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="344" y="88" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="408" y="104" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="472" y="80" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  
+  <rect x="48" y="152" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="120" y="168" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="184" y="176" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="248" y="160" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="320" y="168" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="384" y="152" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="456" y="168" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  
+  <rect x="72" y="232" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="136" y="248" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="208" y="256" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="264" y="240" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="336" y="248" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="400" y="232" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="472" y="248" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  
+  <rect x="40" y="312" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="112" y="320" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="176" y="328" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="240" y="316" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="312" y="324" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="376" y="312" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="448" y="320" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  
+  <rect x="56" y="368" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="128" y="372" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="192" y="376" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="256" y="364" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="328" y="372" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  <rect x="392" y="360" width="8" height="8" fill="#E8F5E9" opacity="0.7"/>
+  <rect x="464" y="368" width="8" height="8" fill="#F1F8E9" opacity="0.7"/>
+  
+  <!-- 冰晶高光点 -->
+  <rect x="160" y="128" width="4" height="4" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="280" y="144" width="4" height="4" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="224" y="216" width="4" height="4" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="368" y="224" width="4" height="4" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="144" y="304" width="4" height="4" fill="#E1F5FE" opacity="0.9"/>
+</svg>
