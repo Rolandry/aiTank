@@ -169,3 +169,18 @@
 .muteButton:hover {
   background: rgba(0, 0, 0, 0.7);
 }
+
+/* 资源加载警告 */
+.assetWarning {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  background: rgba(231, 76, 60, 0.8);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 15;
+  pointer-events: none;
+}

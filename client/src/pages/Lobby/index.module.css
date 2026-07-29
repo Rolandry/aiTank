@@ -105,3 +105,16 @@
   color: #888;
   font-size: 14px;
 }
+
+.reconnectBanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: rgba(231, 76, 60, 0.9);
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  z-index: 100;
+}

@@ -31,6 +31,7 @@ wss.on("connection", (ws) => {
     try {
       msg = JSON.parse(raw.toString());
     } catch {
+      console.warn("[ws] 收到无效 JSON，已忽略");
       return;
     }
     try {
@@ -50,9 +51,13 @@ wss.on("connection", (ws) => {
       manager.getRoom(ctx.roomId)?.removePlayer(ctx.playerId);
     }
     contexts.delete(ws);
+    console.log(`[ws] 连接关闭: ${ctx.playerId}`);
   });
 
-  ws.on("error", () => ws.close());
+  ws.on("error", (err) => {
+    console.error(`[ws] 连接错误: ${ctx.playerId}`, err.message);
+    ws.close();
+  });
 });
 
 function handleMessage(
@@ -129,6 +134,11 @@ function handleMessage(
 
     case "player_input": {
       if (!ctx.roomId || ctx.isSpectator) return;
+      if (typeof msg.up !== "boolean" || typeof msg.down !== "boolean" ||
+          typeof msg.left !== "boolean" || typeof msg.right !== "boolean") {
+        console.warn(`[player_input] 无效输入字段: ${ctx.playerId}`);
+        return;
+      }
       const room = manager.getRoom(ctx.roomId);
       const player = room?.players.get(ctx.playerId);
       if (room?.game && player) room.game.handleInput(player, msg);
@@ -140,6 +150,16 @@ function handleMessage(
       const room = manager.getRoom(ctx.roomId);
       const player = room?.players.get(ctx.playerId);
       if (room?.game && player) room.game.handleShoot(player);
+      return;
+    }
+
+    default: {
+      console.warn(`[ws] 未知消息类型: ${(msg as { type: string }).type}`);
+      send(ws, {
+        type: "room_error",
+        code: "SERVER_ERROR",
+        message: "未知消息类型",
+      });
       return;
     }
   }

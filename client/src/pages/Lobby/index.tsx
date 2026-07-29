@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { gameSocket } from "../../network/socket";
+import { gameSocket, ConnectionState } from "../../network/socket";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
 import type { PlayerInfo } from "../../types/protocol";
 import styles from "./index.module.css";
@@ -14,6 +14,9 @@ export default function Lobby() {
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [hostId, setHostId] = useState("");
   const [canStart, setCanStart] = useState(false);
+  const [connectionState, setConnectionState] = useState(
+    gameSocket.getState()
+  );
 
   useSocketMessage("lobby_update", (msg) => {
     setPlayers(msg.players);
@@ -24,6 +27,12 @@ export default function Lobby() {
   useSocketMessage("countdown", () => {
     navigate(`/game/${roomId}`, { state: { playerId, nickname } });
   });
+
+  useEffect(() => {
+    return gameSocket.onStateChange((state) => {
+      setConnectionState(state);
+    });
+  }, []);
 
   const handleStart = () => {
     gameSocket.send({ type: "start_game" });
@@ -36,9 +45,16 @@ export default function Lobby() {
   };
 
   const amIHost = playerId === hostId;
+  const isReconnecting = connectionState === ConnectionState.RECONNECTING;
 
   return (
     <div className={styles.container}>
+      {isReconnecting && (
+        <div className={styles.reconnectBanner}>
+          正在重新连接服务器...
+        </div>
+      )}
+
       <h2 className={styles.heading}>等待大厅</h2>
       <div className={styles.roomInfo}>
         <span>房间号: {roomId}</span>
@@ -62,7 +78,7 @@ export default function Lobby() {
         {amIHost && (
           <button
             onClick={handleStart}
-            disabled={!canStart}
+            disabled={!canStart || isReconnecting}
             className={styles.startButton}
           >
             开始游戏

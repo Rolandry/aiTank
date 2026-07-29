@@ -1,6 +1,7 @@
 import { PLAYER_COLORS } from "../types/protocol";
 
 const assets = new Map<string, HTMLImageElement>();
+const failedAssets: string[] = [];
 let loadPromise: Promise<void> | null = null;
 
 function getAssetPaths(): Array<{ key: string; path: string }> {
@@ -67,6 +68,7 @@ export function loadAssets(): Promise<void> {
       };
       img.onerror = () => {
         console.warn(`素材加载失败: ${path}，使用降级渲染`);
+        failedAssets.push(path);
         completed++;
         if (completed === paths.length) resolve();
       };
@@ -79,6 +81,10 @@ export function loadAssets(): Promise<void> {
 
 export function getAsset(key: string): HTMLImageElement | null {
   return assets.get(key) ?? null;
+}
+
+export function getFailedAssets(): string[] {
+  return failedAssets;
 }
 
 export const FALLBACK_COLORS: Record<string, string> = {

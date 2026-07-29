@@ -9,6 +9,7 @@ import {
   disableInput,
 } from "../../game/input";
 import { audioManager } from "../../game/audio";
+import { getFailedAssets } from "../../game/assets";
 import { JitterBuffer } from "../../game/jitterBuffer";
 import { PerfMonitor } from "../../components/PerfMonitor";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
@@ -34,6 +35,7 @@ export default function Game() {
   const [disconnected, setDisconnected] = useState(false);
   const [myAlive, setMyAlive] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [assetWarning, setAssetWarning] = useState(false);
 
   const myPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const prevBulletIdsRef = useRef<Set<string>>(new Set());
@@ -48,6 +50,11 @@ export default function Game() {
     audioManager.init().then(() => {
       audioManager.startBgm();
     });
+    const failed = getFailedAssets();
+    if (failed.length > 0) {
+      setAssetWarning(true);
+      console.warn(`[资源加载] ${failed.length} 个素材加载失败，将使用降级渲染`, failed);
+    }
     initInput();
     return () => {
       destroyInput();
@@ -230,6 +237,13 @@ export default function Game() {
 
       {/* 性能监控 */}
       <PerfMonitor />
+
+      {/* 资源加载警告 */}
+      {assetWarning && (
+        <div className={styles.assetWarning}>
+          部分素材加载失败，已切换降级渲染
+        </div>
+      )}
 
       {/* 观战标识 */}
       {isSpectator && <div className={styles.badge}>观战模式</div>}
