@@ -142,179 +142,158 @@
     <text x="12" y="38" fill="#90A4AE" font-size="10">红色击败蓝色 → 红色坦克头顶显示蓝色标记</text>
   </g>
 
-  <!-- ===== 03 地图瓦片 ===== -->
-  <text x="48" y="310" fill="#4FC3F7" font-size="18" font-weight="700">03 / 地图地面瓦片 · 32×32px · 无缝拼接</text>
+  <!-- ===== 03 地图瓦片（浅色版） ===== -->
+  <text x="48" y="310" fill="#4FC3F7" font-size="18" font-weight="700">03 / 地图地面瓦片 · 32×32px · 无缝拼接 · 浅色版</text>
 
-  <!-- 草地丛林 tile -->
+  <!-- 草地丛林 tile - 浅色 -->
   <g transform="translate(80,340)">
-    <rect width="96" height="96" fill="#4CAF50" stroke="#37474F" stroke-width="1"/>
-    <!-- 3×3 重复展示 -->
-    <rect x="0" y="0" width="32" height="32" fill="#4CAF50"/><rect x="0" y="0" width="32" height="2" fill="#43A047"/><rect x="0" y="30" width="32" height="2" fill="#388E3C"/>
-    <rect x="2" y="2" width="4" height="4" fill="#66BB6A"/><rect x="10" y="6" width="4" height="4" fill="#388E3C"/><rect x="20" y="2" width="4" height="4" fill="#66BB6A"/>
-    <rect x="6" y="12" width="4" height="4" fill="#81C784"/><rect x="16" y="10" width="4" height="4" fill="#388E3C"/><rect x="26" y="8" width="4" height="4" fill="#66BB6A"/>
-    <rect x="0" y="18" width="4" height="4" fill="#388E3C"/><rect x="12" y="16" width="4" height="4" fill="#66BB6A"/><rect x="22" y="14" width="4" height="4" fill="#81C784"/>
-    <rect x="8" y="22" width="4" height="4" fill="#66BB6A"/><rect x="18" y="20" width="4" height="4" fill="#388E3C"/><rect x="28" y="18" width="4" height="4" fill="#66BB6A"/>
-    <rect x="2" y="26" width="4" height="4" fill="#81C784"/><rect x="14" y="26" width="4" height="4" fill="#66BB6A"/><rect x="24" y="24" width="4" height="4" fill="#388E3C"/>
-    <rect x="32" y="0" width="32" height="32" fill="#4CAF50"/><rect x="32" y="0" width="32" height="2" fill="#43A047"/><rect x="32" y="30" width="32" height="2" fill="#388E3C"/>
-    <rect x="34" y="2" width="4" height="4" fill="#66BB6A"/><rect x="42" y="6" width="4" height="4" fill="#388E3C"/><rect x="52" y="2" width="4" height="4" fill="#66BB6A"/>
-    <rect x="38" y="12" width="4" height="4" fill="#81C784"/><rect x="48" y="10" width="4" height="4" fill="#388E3C"/><rect x="58" y="8" width="4" height="4" fill="#66BB6A"/>
-    <rect x="32" y="18" width="4" height="4" fill="#388E3C"/><rect x="44" y="16" width="4" height="4" fill="#66BB6A"/><rect x="54" y="14" width="4" height="4" fill="#81C784"/>
-    <rect x="40" y="22" width="4" height="4" fill="#66BB6A"/><rect x="50" y="20" width="4" height="4" fill="#388E3C"/><rect x="60" y="18" width="4" height="4" fill="#66BB6A"/>
-    <rect x="34" y="26" width="4" height="4" fill="#81C784"/><rect x="46" y="26" width="4" height="4" fill="#66BB6A"/><rect x="56" y="24" width="4" height="4" fill="#388E3C"/>
-    <rect x="64" y="0" width="32" height="32" fill="#4CAF50"/><rect x="64" y="0" width="32" height="2" fill="#43A047"/><rect x="64" y="30" width="32" height="2" fill="#388E3C"/>
-    <text x="48" y="110" text-anchor="middle" fill="#66BB6A" font-size="13" font-weight="700">草地丛林</text>
+    <rect width="96" height="96" fill="#81C784" stroke="#37474F" stroke-width="1"/>
+    <!-- 使用新的浅绿色调 -->
+    <rect x="0" y="0" width="32" height="32" fill="#81C784"/>
+    <rect x="2" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <rect x="10" y="6" width="4" height="4" fill="#66BB6A"/>
+    <rect x="20" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <rect x="32" y="0" width="32" height="32" fill="#81C784"/>
+    <rect x="34" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <rect x="42" y="6" width="4" height="4" fill="#66BB6A"/>
+    <rect x="52" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <rect x="64" y="0" width="32" height="32" fill="#81C784"/>
+    <rect x="66" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <rect x="74" y="6" width="4" height="4" fill="#66BB6A"/>
+    <rect x="84" y="2" width="4" height="4" fill="#A5D6A7"/>
+    <text x="48" y="110" text-anchor="middle" fill="#A5D6A7" font-size="13" font-weight="700">草地丛林（浅色）</text>
   </g>
 
-  <!-- 荒漠戈壁 tile -->
+  <!-- 荒漠戈壁 tile - 浅色 -->
   <g transform="translate(280,340)">
-    <rect width="96" height="96" fill="#D4A24E" stroke="#37474F" stroke-width="1"/>
-    <rect x="0" y="0" width="96" height="4" fill="#C49640"/><rect x="0" y="92" width="96" height="4" fill="#B8862E"/>
-    <rect x="4" y="8" width="8" height="8" fill="#E0BA6A"/><rect x="20" y="4" width="8" height="8" fill="#C49640"/>
-    <rect x="48" y="8" width="8" height="8" fill="#E0BA6A"/><rect x="72" y="6" width="8" height="8" fill="#C49640"/>
-    <rect x="8" y="28" width="8" height="8" fill="#C49640"/><rect x="32" y="24" width="8" height="8" fill="#E0BA6A"/>
-    <rect x="60" y="28" width="8" height="8" fill="#C49640"/><rect x="84" y="20" width="8" height="8" fill="#E0BA6A"/>
-    <rect x="4" y="44" width="8" height="8" fill="#E0BA6A"/><rect x="24" y="42" width="8" height="8" fill="#C49640"/>
-    <rect x="52" y="44" width="8" height="8" fill="#E0BA6A"/><rect x="76" y="40" width="8" height="8" fill="#C49640"/>
-    <rect x="12" y="60" width="8" height="8" fill="#C49640"/><rect x="36" y="58" width="8" height="8" fill="#E0BA6A"/>
-    <rect x="64" y="62" width="8" height="8" fill="#C49640"/><rect x="88" y="56" width="8" height="8" fill="#E0BA6A"/>
-    <rect x="8" y="76" width="8" height="8" fill="#E0BA6A"/><rect x="28" y="78" width="8" height="8" fill="#C49640"/>
-    <rect x="56" y="76" width="8" height="8" fill="#E0BA6A"/><rect x="80" y="74" width="8" height="8" fill="#C49640"/>
-    <text x="48" y="110" text-anchor="middle" fill="#E0BA6A" font-size="13" font-weight="700">荒漠戈壁</text>
+    <rect width="96" height="96" fill="#F4D68E" stroke="#37474F" stroke-width="1"/>
+    <rect x="4" y="8" width="8" height="8" fill="#FFF3CD"/>
+    <rect x="20" y="4" width="8" height="8" fill="#E8C878"/>
+    <rect x="48" y="8" width="8" height="8" fill="#FFF3CD"/>
+    <rect x="72" y="6" width="8" height="8" fill="#E8C878"/>
+    <text x="48" y="110" text-anchor="middle" fill="#FFF3CD" font-size="13" font-weight="700">荒漠戈壁（浅色）</text>
   </g>
 
-  <!-- 雪地冰原 tile -->
+  <!-- 雪地冰原 tile - 浅色 -->
   <g transform="translate(480,340)">
-    <rect width="96" height="96" fill="#E8F5E9" stroke="#37474F" stroke-width="1"/>
-    <rect x="0" y="0" width="96" height="4" fill="#C8E6C9"/><rect x="0" y="92" width="96" height="4" fill="#A5D6A7"/>
-    <rect x="4" y="6" width="10" height="8" fill="#F1F8E9"/><rect x="28" y="8" width="10" height="8" fill="#DCEDC8"/>
-    <rect x="52" y="6" width="10" height="8" fill="#F1F8E9"/><rect x="76" y="4" width="10" height="8" fill="#DCEDC8"/>
-    <rect x="8" y="22" width="10" height="8" fill="#DCEDC8"/><rect x="36" y="20" width="10" height="8" fill="#F1F8E9"/>
-    <rect x="64" y="22" width="10" height="8" fill="#DCEDC8"/><rect x="84" y="18" width="10" height="8" fill="#F1F8E9"/>
-    <rect x="4" y="38" width="10" height="8" fill="#F1F8E9"/><rect x="24" y="40" width="10" height="8" fill="#DCEDC8"/>
-    <rect x="52" y="38" width="10" height="8" fill="#F1F8E9"/><rect x="76" y="36" width="10" height="8" fill="#DCEDC8"/>
-    <rect x="8" y="56" width="10" height="8" fill="#DCEDC8"/><rect x="32" y="54" width="10" height="8" fill="#F1F8E9"/>
-    <rect x="60" y="58" width="10" height="8" fill="#DCEDC8"/><rect x="82" y="54" width="10" height="8" fill="#F1F8E9"/>
-    <rect x="4" y="72" width="10" height="8" fill="#F1F8E9"/><rect x="28" y="74" width="10" height="8" fill="#DCEDC8"/>
-    <rect x="56" y="72" width="10" height="8" fill="#F1F8E9"/><rect x="80" y="70" width="10" height="8" fill="#DCEDC8"/>
-    <text x="48" y="110" text-anchor="middle" fill="#B3E5FC" font-size="13" font-weight="700">雪地冰原</text>
+    <rect width="96" height="96" fill="#FFFFFF" stroke="#37474F" stroke-width="1"/>
+    <rect x="4" y="6" width="10" height="8" fill="#FAFAFA"/>
+    <rect x="28" y="8" width="10" height="8" fill="#F1F8E9"/>
+    <rect x="52" y="6" width="10" height="8" fill="#FAFAFA"/>
+    <rect x="76" y="4" width="10" height="8" fill="#F1F8E9"/>
+    <text x="48" y="110" text-anchor="middle" fill="#E1F5FE" font-size="13" font-weight="700">雪地冰原（浅色）</text>
   </g>
 
-  <!-- 城市废墟 tile -->
+  <!-- 城市废墟 tile - 浅色 -->
   <g transform="translate(680,340)">
-    <rect width="96" height="96" fill="#78909C" stroke="#37474F" stroke-width="1"/>
-    <rect x="0" y="0" width="96" height="4" fill="#607D8B"/><rect x="0" y="92" width="96" height="4" fill="#546E7A"/>
-    <rect x="4" y="6" width="8" height="8" fill="#90A4AE"/><rect x="20" y="8" width="8" height="8" fill="#607D8B"/>
-    <rect x="44" y="6" width="8" height="8" fill="#90A4AE"/><rect x="68" y="4" width="8" height="8" fill="#607D8B"/>
-    <rect x="8" y="22" width="8" height="8" fill="#607D8B"/><rect x="32" y="20" width="8" height="8" fill="#90A4AE"/>
-    <rect x="56" y="22" width="8" height="8" fill="#607D8B"/><rect x="80" y="18" width="8" height="8" fill="#90A4AE"/>
-    <rect x="4" y="40" width="8" height="8" fill="#90A4AE"/><rect x="28" y="38" width="8" height="8" fill="#607D8B"/>
-    <rect x="52" y="42" width="8" height="8" fill="#90A4AE"/><rect x="76" y="38" width="8" height="8" fill="#607D8B"/>
-    <rect x="12" y="58" width="8" height="8" fill="#607D8B"/><rect x="36" y="56" width="8" height="8" fill="#90A4AE"/>
-    <rect x="60" y="60" width="8" height="8" fill="#607D8B"/><rect x="84" y="56" width="8" height="8" fill="#90A4AE"/>
-    <rect x="4" y="76" width="8" height="8" fill="#90A4AE"/><rect x="28" y="78" width="8" height="8" fill="#607D8B"/>
-    <rect x="52" y="74" width="8" height="8" fill="#90A4AE"/><rect x="76" y="76" width="8" height="8" fill="#607D8B"/>
-    <text x="48" y="110" text-anchor="middle" fill="#90A4AE" font-size="13" font-weight="700">城市废墟</text>
+    <rect width="96" height="96" fill="#B0BEC5" stroke="#37474F" stroke-width="1"/>
+    <rect x="4" y="6" width="8" height="8" fill="#CFD8DC"/>
+    <rect x="20" y="8" width="8" height="8" fill="#90A4AE"/>
+    <rect x="44" y="6" width="8" height="8" fill="#CFD8DC"/>
+    <rect x="68" y="4" width="8" height="8" fill="#90A4AE"/>
+    <text x="48" y="110" text-anchor="middle" fill="#CFD8DC" font-size="13" font-weight="700">城市废墟（浅色）</text>
   </g>
 
-  <!-- ===== 04 障碍物 ===== -->
-  <text x="48" y="490" fill="#4FC3F7" font-size="18" font-weight="700">04 / 障碍物 · 每主题3种类型=3种固定尺寸</text>
+  <!-- ===== 04 障碍物（深色版） ===== -->
+  <text x="48" y="490" fill="#4FC3F7" font-size="18" font-weight="700">04 / 障碍物 · 每主题3种类型=3种固定尺寸 · 深色版</text>
 
-  <!-- 草地丛林障碍物 -->
+  <!-- 草地丛林障碍物 - 深色 -->
   <g transform="translate(48,510)">
     <rect width="340" height="160" rx="8" fill="#263238" stroke="#2E7D32" stroke-width="1"/>
-    <text x="12" y="22" fill="#66BB6A" font-size="13" font-weight="700">草地丛林</text>
-    <!-- 树木 1×1 -->
-    <rect x="16" y="32" width="32" height="32" fill="#2E7D32"/><rect x="18" y="34" width="28" height="28" fill="#4CAF50"/>
-    <rect x="22" y="38" width="8" height="8" fill="#66BB6A"/><rect x="28" y="52" width="4" height="6" fill="#5D4037"/>
+    <text x="12" y="22" fill="#66BB6A" font-size="13" font-weight="700">草地丛林（深色）</text>
+    <!-- 树木 1×1 - 深色 -->
+    <rect x="16" y="32" width="32" height="32" fill="#1B5E20"/>
+    <rect x="18" y="34" width="28" height="28" fill="#2E7D32"/>
+    <rect x="22" y="38" width="8" height="8" fill="#388E3C"/>
+    <rect x="28" y="52" width="4" height="6" fill="#3E2723"/>
     <text x="32" y="80" text-anchor="middle" fill="#A5D6A7" font-size="10">树木 1×1</text>
     <text x="32" y="94" text-anchor="middle" fill="#78909C" font-size="9">32×32px</text>
-    <!-- 岩石 2×1 -->
-    <rect x="72" y="32" width="64" height="32" fill="#616161"/><rect x="74" y="34" width="60" height="28" fill="#9E9E9E"/>
-    <rect x="78" y="36" width="12" height="8" fill="#BDBDBD"/><rect x="100" y="38" width="2" height="14" fill="#757575"/>
-    <rect x="84" y="52" width="6" height="4" fill="#4CAF50"/>
+    <!-- 岩石 2×1 - 深色 -->
+    <rect x="72" y="32" width="64" height="32" fill="#424242"/>
+    <rect x="74" y="34" width="60" height="28" fill="#616161"/>
+    <rect x="78" y="36" width="12" height="8" fill="#757575"/>
     <text x="104" y="80" text-anchor="middle" fill="#A5D6A7" font-size="10">岩石 2×1</text>
     <text x="104" y="94" text-anchor="middle" fill="#78909C" font-size="9">64×32px</text>
-    <!-- 木箱 2×2 -->
-    <rect x="160" y="32" width="64" height="64" fill="#4E342E"/><rect x="162" y="34" width="60" height="60" fill="#8D6E63"/>
-    <rect x="162" y="34" width="60" height="2" fill="#A1887F"/><rect x="162" y="50" width="60" height="2" fill="#6D4C41"/>
-    <rect x="162" y="66" width="60" height="2" fill="#6D4C41"/><rect x="162" y="82" width="60" height="2" fill="#6D4C41"/>
-    <rect x="162" y="34" width="2" height="60" fill="#5D4037"/><rect x="220" y="34" width="2" height="60" fill="#5D4037"/>
-    <rect x="186" y="56" width="10" height="10" fill="#FFC107"/>
+    <!-- 木箱 2×2 - 深色 -->
+    <rect x="160" y="32" width="64" height="64" fill="#3E2723"/>
+    <rect x="162" y="34" width="60" height="60" fill="#5D4037"/>
+    <rect x="186" y="56" width="10" height="10" fill="#FF9800"/>
     <text x="192" y="112" text-anchor="middle" fill="#A5D6A7" font-size="10">木箱 2×2</text>
     <text x="192" y="126" text-anchor="middle" fill="#78909C" font-size="9">64×64px</text>
   </g>
 
-  <!-- 荒漠戈壁障碍物 -->
+  <!-- 荒漠戈壁障碍物 - 深色 -->
   <g transform="translate(420,510)">
     <rect width="340" height="160" rx="8" fill="#263238" stroke="#C49640" stroke-width="1"/>
-    <text x="12" y="22" fill="#E0BA6A" font-size="13" font-weight="700">荒漠戈壁</text>
-    <!-- 石块 1×1 -->
-    <rect x="16" y="32" width="32" height="32" fill="#8D6E63"/><rect x="18" y="34" width="28" height="28" fill="#A1887F"/>
-    <rect x="20" y="36" width="10" height="8" fill="#BCAAA4"/><rect x="26" y="38" width="2" height="12" fill="#795548"/>
+    <text x="12" y="22" fill="#E0BA6A" font-size="13" font-weight="700">荒漠戈壁（深色）</text>
+    <!-- 石块 1×1 - 深色 -->
+    <rect x="16" y="32" width="32" height="32" fill="#5D4037"/>
+    <rect x="18" y="34" width="28" height="28" fill="#795548"/>
+    <rect x="20" y="36" width="10" height="8" fill="#8D6E63"/>
     <text x="32" y="80" text-anchor="middle" fill="#E0BA6A" font-size="10">石块 1×1</text>
     <text x="32" y="94" text-anchor="middle" fill="#78909C" font-size="9">32×32px</text>
-    <!-- 废墟 2×1 -->
-    <rect x="72" y="32" width="64" height="32" fill="#6D4C41"/><rect x="74" y="36" width="20" height="24" fill="#8D6E63"/>
-    <rect x="100" y="38" width="14" height="22" fill="#795548"/><rect x="120" y="34" width="14" height="26" fill="#8D6E63"/>
+    <!-- 废墟 2×1 - 深色 -->
+    <rect x="72" y="32" width="64" height="32" fill="#4E342E"/>
+    <rect x="74" y="36" width="20" height="24" fill="#5D4037"/>
+    <rect x="100" y="38" width="14" height="22" fill="#4E342E"/>
     <text x="104" y="80" text-anchor="middle" fill="#E0BA6A" font-size="10">废墟 2×1</text>
     <text x="104" y="94" text-anchor="middle" fill="#78909C" font-size="9">64×32px</text>
-    <!-- 沙堆 2×2 -->
-    <rect x="160" y="32" width="64" height="64" fill="#BF8C3E"/><rect x="162" y="34" width="60" height="58" fill="#D4A24E"/>
-    <rect x="166" y="36" width="10" height="4" fill="#E8C878"/>
-    <rect x="168" y="48" width="16" height="2" fill="#C49640"/><rect x="172" y="60" width="18" height="2" fill="#C49640"/>
+    <!-- 沙堆 2×2 - 深色 -->
+    <rect x="160" y="32" width="64" height="64" fill="#9A6D2E"/>
+    <rect x="162" y="34" width="60" height="58" fill="#BF8C3E"/>
+    <rect x="166" y="36" width="10" height="4" fill="#C49640"/>
     <text x="192" y="112" text-anchor="middle" fill="#E0BA6A" font-size="10">沙堆 2×2</text>
     <text x="192" y="126" text-anchor="middle" fill="#78909C" font-size="9">64×64px</text>
   </g>
 
-  <!-- 雪地冰原障碍物 -->
+  <!-- 雪地冰原障碍物 - 深色 -->
   <g transform="translate(792,510)">
     <rect width="340" height="160" rx="8" fill="#263238" stroke="#B3E5FC" stroke-width="1"/>
-    <text x="12" y="22" fill="#B3E5FC" font-size="13" font-weight="700">雪地冰原</text>
-    <!-- 冰堆 1×1 -->
-    <rect x="16" y="32" width="32" height="32" fill="#90CAF9"/><rect x="18" y="34" width="28" height="28" fill="#BBDEFB"/>
-    <rect x="20" y="36" width="10" height="8" fill="#E3F2FD"/><rect x="28" y="40" width="1" height="12" fill="#64B5F6"/>
+    <text x="12" y="22" fill="#B3E5FC" font-size="13" font-weight="700">雪地冰原（深色）</text>
+    <!-- 冰堆 1×1 - 深色 -->
+    <rect x="16" y="32" width="32" height="32" fill="#5C9AC7"/>
+    <rect x="18" y="34" width="28" height="28" fill="#64B5F6"/>
+    <rect x="20" y="36" width="10" height="8" fill="#90CAF9"/>
     <text x="32" y="80" text-anchor="middle" fill="#B3E5FC" font-size="10">冰堆 1×1</text>
     <text x="32" y="94" text-anchor="middle" fill="#78909C" font-size="9">32×32px</text>
-    <!-- 雪块 2×1 -->
-    <rect x="72" y="32" width="64" height="32" fill="#CFD8DC"/><rect x="74" y="34" width="60" height="28" fill="#ECEFF1"/>
-    <rect x="78" y="36" width="14" height="8" fill="#F5F5F5"/><rect x="102" y="38" width="2" height="14" fill="#B0BEC5"/>
+    <!-- 雪块 2×1 - 深色 -->
+    <rect x="72" y="32" width="64" height="32" fill="#90A4AE"/>
+    <rect x="74" y="34" width="60" height="28" fill="#B0BEC5"/>
+    <rect x="78" y="36" width="14" height="8" fill="#CFD8DC"/>
     <text x="104" y="80" text-anchor="middle" fill="#B3E5FC" font-size="10">雪块 2×1</text>
     <text x="104" y="94" text-anchor="middle" fill="#78909C" font-size="9">64×32px</text>
-    <!-- 木箱 2×2 -->
-    <rect x="160" y="32" width="64" height="64" fill="#4E342E"/><rect x="162" y="34" width="60" height="60" fill="#8D6E63"/>
-    <rect x="162" y="34" width="60" height="2" fill="#A1887F"/><rect x="162" y="50" width="60" height="2" fill="#6D4C41"/>
-    <rect x="162" y="66" width="60" height="2" fill="#6D4C41"/><rect x="162" y="82" width="60" height="2" fill="#6D4C41"/>
-    <rect x="162" y="34" width="4" height="60" fill="#E0E0E0"/>
-    <rect x="186" y="56" width="10" height="10" fill="#FFC107"/>
+    <!-- 木箱 2×2 - 深色 -->
+    <rect x="160" y="32" width="64" height="64" fill="#3E2723"/>
+    <rect x="162" y="34" width="60" height="60" fill="#5D4037"/>
+    <rect x="162" y="34" width="52" height="4" fill="#B0BEC5"/>
+    <rect x="186" y="56" width="10" height="10" fill="#FF9800"/>
     <text x="192" y="112" text-anchor="middle" fill="#B3E5FC" font-size="10">木箱 2×2</text>
     <text x="192" y="126" text-anchor="middle" fill="#78909C" font-size="9">64×64px</text>
   </g>
 
-  <!-- 城市废墟障碍物 -->
+  <!-- 城市废墟障碍物 - 深色 -->
   <g transform="translate(1164,510)">
     <rect width="340" height="160" rx="8" fill="#263238" stroke="#78909C" stroke-width="1"/>
-    <text x="12" y="22" fill="#90A4AE" font-size="13" font-weight="700">城市废墟</text>
-    <!-- 钢板 1×1 -->
-    <rect x="16" y="32" width="32" height="32" fill="#78909C"/><rect x="18" y="34" width="28" height="28" fill="#90A4AE"/>
-    <rect x="20" y="36" width="4" height="4" fill="#B0BEC5"/><rect x="42" y="36" width="4" height="4" fill="#B0BEC5"/>
-    <rect x="20" y="58" width="4" height="4" fill="#B0BEC5"/><rect x="42" y="58" width="4" height="4" fill="#B0BEC5"/>
+    <text x="12" y="22" fill="#90A4AE" font-size="13" font-weight="700">城市废墟（深色）</text>
+    <!-- 钢板 1×1 - 深色 -->
+    <rect x="16" y="32" width="32" height="32" fill="#455A64"/>
+    <rect x="18" y="34" width="28" height="28" fill="#546E7A"/>
+    <rect x="20" y="36" width="4" height="4" fill="#607D8B"/>
+    <rect x="42" y="36" width="4" height="4" fill="#607D8B"/>
     <text x="32" y="80" text-anchor="middle" fill="#90A4AE" font-size="10">钢板 1×1</text>
     <text x="32" y="94" text-anchor="middle" fill="#78909C" font-size="9">32×32px</text>
-    <!-- 砖墙 2×1 -->
-    <rect x="72" y="32" width="64" height="32" fill="#8D6E63"/>
-    <rect x="72" y="32" width="64" height="1" fill="#5D4037"/><rect x="72" y="42" width="64" height="1" fill="#5D4037"/>
-    <rect x="72" y="52" width="64" height="1" fill="#5D4037"/>
-    <rect x="88" y="33" width="1" height="9" fill="#5D4037"/><rect x="104" y="33" width="1" height="9" fill="#5D4037"/>
-    <rect x="120" y="43" width="1" height="9" fill="#5D4037"/><rect x="80" y="43" width="1" height="9" fill="#5D4037"/>
+    <!-- 砖墙 2×1 - 深色 -->
+    <rect x="72" y="32" width="64" height="32" fill="#5D4037"/>
+    <rect x="72" y="32" width="64" height="1" fill="#3E2723"/>
+    <rect x="72" y="42" width="64" height="1" fill="#3E2723"/>
     <text x="104" y="80" text-anchor="middle" fill="#90A4AE" font-size="10">砖墙 2×1</text>
     <text x="104" y="94" text-anchor="middle" fill="#78909C" font-size="9">64×32px</text>
-    <!-- 路障 2×2 -->
-    <rect x="160" y="32" width="64" height="64" fill="#37474F"/>
-    <rect x="162" y="34" width="60" height="14" fill="#455A64"/>
-    <rect x="162" y="50" width="60" height="30" fill="#546E7A"/>
-    <rect x="170" y="52" width="48" height="4" fill="#FFC107"/>
-    <rect x="174" y="52" width="4" height="4" fill="#212121"/><rect x="182" y="52" width="4" height="4" fill="#212121"/>
-    <rect x="190" y="52" width="4" height="4" fill="#212121"/><rect x="198" y="52" width="4" height="4" fill="#212121"/>
+    <!-- 路障 2×2 - 深色 -->
+    <rect x="160" y="32" width="64" height="64" fill="#263238"/>
+    <rect x="162" y="34" width="60" height="14" fill="#37474F"/>
+    <rect x="170" y="52" width="48" height="4" fill="#FF9800"/>
+    <rect x="174" y="52" width="4" height="4" fill="#000000"/>
+    <rect x="182" y="52" width="4" height="4" fill="#000000"/>
     <text x="192" y="112" text-anchor="middle" fill="#90A4AE" font-size="10">路障 2×2</text>
     <text x="192" y="126" text-anchor="middle" fill="#78909C" font-size="9">64×64px</text>
   </g>
@@ -341,8 +320,6 @@
     <rect x="-16" y="-16" width="96" height="96" fill="none" stroke="#37474F" stroke-width="1" stroke-dasharray="3,3"/>
     <rect x="24" y="22" width="16" height="20" fill="#FFFFFF"/><rect x="22" y="24" width="20" height="16" fill="#FFFFFF"/>
     <rect x="20" y="26" width="24" height="12" fill="#FFF9C4"/><rect x="26" y="20" width="12" height="24" fill="#FFF9C4"/>
-    <rect x="31" y="8" width="2" height="12" fill="#FFFFFF" opacity="0.8"/><rect x="31" y="44" width="2" height="12" fill="#FFFFFF" opacity="0.8"/>
-    <rect x="8" y="31" width="12" height="2" fill="#FFFFFF" opacity="0.8"/><rect x="44" y="31" width="12" height="2" fill="#FFFFFF" opacity="0.8"/>
     <text x="32" y="80" text-anchor="middle" fill="#FFFFFF" font-size="10">帧1·闪光</text>
     <text x="32" y="92" text-anchor="middle" fill="#78909C" font-size="9">Ø16px</text>
   </g>
@@ -351,7 +328,6 @@
   <g transform="translate(380,748)">
     <rect x="-16" y="-16" width="96" height="96" fill="none" stroke="#37474F" stroke-width="1" stroke-dasharray="3,3"/>
     <rect x="16" y="12" width="32" height="40" fill="#FF9800"/><rect x="12" y="16" width="40" height="32" fill="#FF9800"/>
-    <rect x="8" y="22" width="48" height="20" fill="#FF9800"/><rect x="22" y="8" width="20" height="48" fill="#FF9800"/>
     <rect x="24" y="20" width="16" height="24" fill="#FFFFFF"/><rect x="20" y="24" width="24" height="16" fill="#FFFFFF"/>
     <rect x="18" y="22" width="28" height="20" fill="#FFEB3B"/><rect x="22" y="18" width="20" height="28" fill="#FFEB3B"/>
     <text x="32" y="80" text-anchor="middle" fill="#FF9800" font-size="10">帧2·爆发</text>
@@ -362,9 +338,7 @@
   <g transform="translate(540,748)">
     <rect x="-16" y="-16" width="96" height="96" fill="none" stroke="#37474F" stroke-width="1" stroke-dasharray="3,3"/>
     <rect x="8" y="4" width="48" height="56" fill="#BDBDBD" opacity="0.5"/><rect x="4" y="8" width="56" height="48" fill="#BDBDBD" opacity="0.5"/>
-    <rect x="14" y="10" width="36" height="44" fill="#FF9800" opacity="0.6"/><rect x="10" y="14" width="44" height="36" fill="#FF9800" opacity="0.6"/>
-    <rect x="22" y="18" width="20" height="28" fill="#FFEB3B" opacity="0.8"/><rect x="18" y="22" width="28" height="20" fill="#FFEB3B" opacity="0.8"/>
-    <rect x="26" y="24" width="12" height="16" fill="#FFFFFF" opacity="0.6"/>
+    <rect x="14" y="10" width="36" height="44" fill="#FF9800" opacity="0.6"/>
     <text x="32" y="80" text-anchor="middle" fill="#BDBDBD" font-size="10">帧3·烟雾</text>
     <text x="32" y="92" text-anchor="middle" fill="#78909C" font-size="9">Ø48px</text>
   </g>
@@ -372,10 +346,8 @@
   <!-- 爆炸帧4 -->
   <g transform="translate(700,748)">
     <rect x="-16" y="-16" width="96" height="96" fill="none" stroke="#37474F" stroke-width="1" stroke-dasharray="3,3"/>
-    <rect x="4" y="0" width="56" height="64" fill="#E0E0E0" opacity="0.25"/><rect x="0" y="4" width="64" height="56" fill="#E0E0E0" opacity="0.25"/>
+    <rect x="4" y="0" width="56" height="64" fill="#E0E0E0" opacity="0.25"/>
     <rect x="8" y="6" width="48" height="52" fill="#BDBDBD" opacity="0.3"/>
-    <rect x="20" y="16" width="24" height="32" fill="#FF9800" opacity="0.2"/><rect x="16" y="20" width="32" height="24" fill="#FF9800" opacity="0.2"/>
-    <rect x="28" y="28" width="8" height="8" fill="#FFFFFF" opacity="0.15"/>
     <text x="32" y="80" text-anchor="middle" fill="#78909C" font-size="10">帧4·消散</text>
     <text x="32" y="92" text-anchor="middle" fill="#78909C" font-size="9">Ø60px</text>
   </g>
@@ -400,21 +372,21 @@
   <!-- 底部统计信息 -->
   <g transform="translate(48,900)">
     <rect width="1504" height="140" rx="10" fill="#263238" stroke="#37474F" stroke-width="2"/>
-    <text x="24" y="32" fill="#4FC3F7" font-size="16" font-weight="700">资产统计总览</text>
+    <text x="24" y="32" fill="#4FC3F7" font-size="16" font-weight="700">资产统计总览 · 优化版</text>
     
     <!-- 左侧统计 -->
     <text x="24" y="60" fill="#66BB6A" font-size="13" font-weight="700">✓ 坦克精灵：4张</text>
     <text x="24" y="78" fill="#90A4AE" font-size="11">红/蓝/绿/黄 · 64×64px · 造型统一仅色不同</text>
     
     <text x="24" y="104" fill="#FFD54F" font-size="13" font-weight="700">✓ 击杀标记：4张</text>
-    <text x="24" y="122" fill="#90A4AE" font-size="11">红/蓝/绿/黄 · 20×20px · 五角星徽章 · NEW!</text>
+    <text x="24" y="122" fill="#90A4AE" font-size="11">红/蓝/绿/黄 · 20×20px · 五角星徽章</text>
     
     <!-- 中左统计 -->
-    <text x="400" y="60" fill="#66BB6A" font-size="13" font-weight="700">✓ 地图瓦片：4种主题</text>
-    <text x="400" y="78" fill="#90A4AE" font-size="11">草地/荒漠/雪地/城市 · 32×32px · 无缝拼接</text>
+    <text x="400" y="60" fill="#66BB6A" font-size="13" font-weight="700">✓ 地图瓦片：4种主题（浅色优化）</text>
+    <text x="400" y="78" fill="#90A4AE" font-size="11">草地/荒漠/雪地/城市 · 32×32px · 提亮处理</text>
     
-    <text x="400" y="104" fill="#66BB6A" font-size="13" font-weight="700">✓ 障碍物：12张</text>
-    <text x="400" y="122" fill="#90A4AE" font-size="11">4主题×3尺寸(1×1, 2×1, 2×2) · 对齐网格</text>
+    <text x="400" y="104" fill="#66BB6A" font-size="13" font-weight="700">✓ 障碍物：12张（深色优化）</text>
+    <text x="400" y="122" fill="#90A4AE" font-size="11">4主题×3尺寸 · 加深处理 · 对比度提升</text>
     
     <!-- 中右统计 -->
     <text x="800" y="60" fill="#66BB6A" font-size="13" font-weight="700">✓ 子弹：1张</text>
@@ -426,14 +398,14 @@
     <!-- 右侧核心规范 -->
     <g transform="translate(1150,0)">
       <rect x="0" y="12" width="330" height="116" rx="6" fill="#1a1a2e" stroke="#4FC3F7" stroke-width="1"/>
-      <text x="16" y="36" fill="#4FC3F7" font-size="13" font-weight="700">核心规范</text>
-      <text x="16" y="56" fill="#E0E0E0" font-size="11">• 视角：正俯视90°垂直向下</text>
-      <text x="16" y="74" fill="#E0E0E0" font-size="11">• 风格：像素风 · shape-rendering:crispEdges</text>
-      <text x="16" y="92" fill="#E0E0E0" font-size="11">• 基准：32px瓦片 · 地图64×64格=2048px</text>
-      <text x="16" y="110" fill="#E0E0E0" font-size="11">• 背景：所有素材纯透明PNG</text>
+      <text x="16" y="36" fill="#4FC3F7" font-size="13" font-weight="700">核心规范 + 优化亮点</text>
+      <text x="16" y="56" fill="#E0E0E0" font-size="11">• 地图瓦片：浅色处理，提升可读性</text>
+      <text x="16" y="74" fill="#E0E0E0" font-size="11">• 障碍物：深色加强，区分度更高</text>
+      <text x="16" y="92" fill="#E0E0E0" font-size="11">• 击杀标记：新增五角星徽章系统</text>
+      <text x="16" y="110" fill="#E0E0E0" font-size="11">• 基准：32px瓦片 · 所有素材纯透明</text>
     </g>
   </g>
 
   <!-- 底部标注 -->
-  <text x="800" y="1068" text-anchor="middle" fill="#546E7A" font-size="11">PIXEL TANK BATTLE ASSETS · 严格遵循 pixel-tank-battle-assets skill 规范生成 · 含击杀标记系统 v1.1</text>
+  <text x="800" y="1068" text-anchor="middle" fill="#546E7A" font-size="11">PIXEL TANK BATTLE ASSETS · 优化版 v1.2 · 地图浅色+障碍深色 · 含击杀标记系统 · 对比度提升</text>
 </svg>
