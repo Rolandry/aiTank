@@ -114,6 +114,7 @@ export type ObstacleSnapshot = {
   y: number;
   width: number;
   height: number;
+  type?: string; // 障碍物类型：crate / rock / tree，可选（向后兼容）
 };
 
 export type WorldSnapshot = {

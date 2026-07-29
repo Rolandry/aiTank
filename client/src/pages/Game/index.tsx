@@ -12,6 +12,27 @@ import { useSocketMessage } from "../../hooks/useSocketMessage";
 import type { WorldSnapshot, GameOverEvent } from "../../types/protocol";
 import styles from "./index.module.css";
 
+// 线性插值
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+// 角度插值（处理 360 度环绕）
+function lerpAngle(a: number, b: number, t: number): number {
+  let diff = b - a;
+  if (diff > Math.PI) diff -= 2 * Math.PI;
+  if (diff < -Math.PI) diff += 2 * Math.PI;
+  return a + diff * t;
+}
+
+// 方向角度映射
+const DIRECTION_ANGLE: Record<string, number> = {
+  up: 0,
+  right: Math.PI / 2,
+  down: Math.PI,
+  left: -Math.PI / 2,
+};
+
 export default function Game() {
   const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
@@ -20,7 +41,11 @@ export default function Game() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<GameRenderer | null>(null);
-  const snapshotRef = useRef<WorldSnapshot | null>(null);
+
+  // 双缓存快照用于插值
+  const prevSnapshotRef = useRef<WorldSnapshot | null>(null);
+  const currSnapshotRef = useRef<WorldSnapshot | null>(null);
+  const snapshotTimeRef = useRef<number>(0);
 
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameState, setGameState] = useState<string>("waiting");
@@ -41,12 +66,59 @@ export default function Game() {
     };
   }, [playerId]);
 
-  // 60fps 渲染循环（独立于快照频率）
+  // 60fps 渲染循环（带插值）
   useEffect(() => {
     let animId: number;
     const loop = () => {
-      if (rendererRef.current && snapshotRef.current) {
-        rendererRef.current.render(snapshotRef.current);
+      if (
+        rendererRef.current &&
+        currSnapshotRef.current &&
+        prevSnapshotRef.current
+      ) {
+        const elapsed = Date.now() - snapshotTimeRef.current;
+        const tickInterval = 1000 / 20; // 20Hz = 50ms
+        const t = Math.min(elapsed / tickInterval, 1);
+
+        // 对玩家位置做插值
+        const interpolatedPlayers = currSnapshotRef.current.players.map(
+          (player) => {
+            const prev = prevSnapshotRef.current?.players.find(
+              (p) => p.playerId === player.playerId
+            );
+            if (!prev) return player;
+
+            return {
+              ...player,
+              x: lerp(prev.x, player.x, t),
+              y: lerp(prev.y, player.y, t),
+            };
+          }
+        );
+
+        // 对子弹位置做插值
+        const interpolatedBullets = currSnapshotRef.current.bullets.map(
+          (bullet) => {
+            const prev = prevSnapshotRef.current?.bullets.find(
+              (b) => b.bulletId === bullet.bulletId
+            );
+            if (!prev) return bullet;
+
+            return {
+              ...bullet,
+              x: lerp(prev.x, bullet.x, t),
+              y: lerp(prev.y, bullet.y, t),
+            };
+          }
+        );
+
+        rendererRef.current.render({
+          ...currSnapshotRef.current,
+          players: interpolatedPlayers,
+          bullets: interpolatedBullets,
+        });
+      } else if (rendererRef.current && currSnapshotRef.current) {
+        // 第一帧没有 prev，直接渲染
+        rendererRef.current.render(currSnapshotRef.current);
       }
       animId = requestAnimationFrame(loop);
     };
@@ -67,7 +139,11 @@ export default function Game() {
 
   // 世界快照
   useSocketMessage("world_snapshot", (msg) => {
-    snapshotRef.current = msg;
+    // 保存上一次快照
+    prevSnapshotRef.current = currSnapshotRef.current;
+    currSnapshotRef.current = msg;
+    snapshotTimeRef.current = Date.now();
+
     setGameState(msg.status);
 
     const me = msg.players.find((p) => p.playerId === playerId);
@@ -88,7 +164,7 @@ export default function Game() {
 
   // 淘汰爆炸
   useSocketMessage("player_eliminated", (msg) => {
-    const player = snapshotRef.current?.players.find(
+    const player = currSnapshotRef.current?.players.find(
       (p) => p.playerId === msg.playerId
     );
     if (player) {

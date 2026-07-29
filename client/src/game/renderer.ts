@@ -62,12 +62,30 @@ export class GameRenderer {
   }
 
   private renderObstacles(obstacles: WorldSnapshot["obstacles"]): void {
-    const img = getAsset("wall");
+    // 障碍物类型 → 素材映射
+    const OBSTACLE_ASSETS: Record<string, string> = {
+      crate: "obstacle_crate",
+      rock: "obstacle_rock",
+      tree: "obstacle_tree",
+    };
+
+    // 障碍物类型 → 降级颜色
+    const OBSTACLE_COLORS: Record<string, string> = {
+      crate: "#8B4513",
+      rock: "#808080",
+      tree: "#228B22",
+    };
+
     for (const obs of obstacles) {
+      const type = obs.type || "crate";
+      const assetKey = OBSTACLE_ASSETS[type] || "wall";
+      const img = getAsset(assetKey);
+
       if (img) {
         this.ctx.drawImage(img, obs.x, obs.y, obs.width, obs.height);
       } else {
-        this.ctx.fillStyle = FALLBACK_COLORS.wall;
+        // 降级：不同类型用不同颜色
+        this.ctx.fillStyle = OBSTACLE_COLORS[type] || FALLBACK_COLORS.wall;
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       }
     }

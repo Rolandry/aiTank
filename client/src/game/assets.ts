@@ -14,8 +14,11 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
     });
   }
 
-  // 障碍物
+  // 障碍物（默认 + 多种类型）
   paths.push({ key: "wall", path: "/assets/obstacles/wall_brick.png" });
+  paths.push({ key: "obstacle_crate", path: "/assets/obstacles/obstacle_grass_jungle_crate_2x2.png" });
+  paths.push({ key: "obstacle_rock", path: "/assets/obstacles/obstacle_grass_jungle_rock_2x1.png" });
+  paths.push({ key: "obstacle_tree", path: "/assets/obstacles/obstacle_grass_jungle_tree_1x1.png" });
 
   // 子弹
   paths.push({ key: "bullet", path: "/assets/bullets/bullet.png" });
