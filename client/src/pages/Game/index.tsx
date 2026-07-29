@@ -9,7 +9,7 @@ import {
   disableInput,
 } from "../../game/input";
 import { audioManager } from "../../game/audio";
-import { getFailedAssets } from "../../game/assets";
+import { getFailedAssets, FALLBACK_COLORS } from "../../game/assets";
 import { JitterBuffer } from "../../game/jitterBuffer";
 import { PerfMonitor } from "../../components/PerfMonitor";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
@@ -139,6 +139,15 @@ export default function Game() {
         myPosRef.current.y,
         isMyHit ? 1 : 0.7
       );
+      // 粒子飞溅
+      rendererRef.current?.effects.spawnParticles(target.x, target.y, 12, "#ff6b35", 180);
+      // 屏幕震动（自己被命中震得更猛）
+      if (isMyHit) {
+        rendererRef.current?.effects.triggerShake(8, 200);
+        rendererRef.current?.effects.triggerHitStop(60);
+      } else {
+        rendererRef.current?.effects.triggerShake(3, 100);
+      }
     } else {
       audioManager.play("hit", 0.5);
     }
@@ -160,6 +169,15 @@ export default function Game() {
         myPosRef.current.y,
         isMe ? 1 : 0.8
       );
+      // 大量粒子飞溅
+      rendererRef.current?.effects.spawnParticles(player.x, player.y, 30, "#ff4500", 250);
+      rendererRef.current?.effects.spawnParticles(player.x, player.y, 15, "#ffaa00", 200);
+      // 屏幕震动
+      rendererRef.current?.effects.triggerShake(isMe ? 15 : 8, 300);
+      // 命中卡帧
+      rendererRef.current?.effects.triggerHitStop(100);
+      // 环境光闪
+      rendererRef.current?.effects.triggerAmbientLight(player.x, player.y, 200, 400);
     }
     if (msg.playerId === playerId) {
       setMyAlive(false);
@@ -215,7 +233,7 @@ export default function Game() {
     );
   });
 
-  // 冲刺：播放音效
+  // 冲刺：播放音效 + 视觉拖尾
   useSocketMessage("dash", (msg) => {
     audioManager.playWithDistance(
       "shoot",
@@ -225,6 +243,13 @@ export default function Game() {
       myPosRef.current.y,
       0.3
     );
+    const player = latestSnapshotRef.current?.players.find(
+      (p) => p.playerId === msg.playerId
+    );
+    const color = player
+      ? FALLBACK_COLORS[player.color] ?? "#fff"
+      : "#fff";
+    rendererRef.current?.addDashEffect(msg.fromX, msg.fromY, msg.toX, msg.toY, color);
   });
 
   // 断线检测

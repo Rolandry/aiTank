@@ -7,6 +7,7 @@ import type {
 } from "../types/protocol";
 import { getAsset, FALLBACK_COLORS } from "./assets";
 import { ExplosionManager } from "./explosion";
+import { EffectsSystem } from "./effects";
 
 // 方向 → 旋转角度（弧度）
 const DIRECTION_ANGLE: Record<string, number> = {
@@ -34,7 +35,18 @@ export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private myPlayerId: string | null = null;
   private hitFlashMap = new Map<string, number>();
+  private dashEffects: Array<{
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+    startTime: number;
+    color: string;
+  }> = [];
   readonly explosions = new ExplosionManager();
+  readonly effects = new EffectsSystem();
+  private lastFrameTime = 0;
+  private prevTankPositions = new Map<string, { x: number; y: number; angle: number }>();
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
@@ -50,14 +62,85 @@ export class GameRenderer {
     this.hitFlashMap.set(playerId, Date.now());
   }
 
+  addDashEffect(fromX: number, fromY: number, toX: number, toY: number, color: string): void {
+    this.dashEffects.push({
+      fromX,
+      fromY,
+      toX,
+      toY,
+      startTime: Date.now(),
+      color,
+    });
+  }
+
   render(snapshot: WorldSnapshot): void {
+    const now = Date.now();
+    const dt = this.lastFrameTime ? Math.min((now - this.lastFrameTime) / 1000, 0.1) : 0.016;
+    this.lastFrameTime = now;
+
+    this.effects.setTheme(snapshot.mapTheme ?? "grass_jungle");
+
+    // 命中卡帧：跳过整个渲染（保持上一帧画面）
+    if (this.effects.isHitStopped()) {
+      return;
+    }
+
+    // 屏幕震动偏移
+    const shake = this.effects.getShakeOffset();
+
+    this.ctx.save();
+    this.ctx.translate(shake.x, shake.y);
+
     this.clear(snapshot.mapTheme);
+
+    // 履带轨迹（在地面层）
+    this.effects.renderTrackMarks(this.ctx);
+
+    // 阴影
+    this.effects.renderShadows(this.ctx, snapshot.players.filter(p => p.alive).map(p => ({
+      x: p.x, y: p.y, size: p.size ?? GAME_CONFIG.tankSize,
+    })));
+
     this.renderObstacles(snapshot.obstacles);
     this.renderPowerups(snapshot.powerups ?? []);
+    this.renderDashEffects(snapshot);
+
+    // 更新履带轨迹（检测移动的坦克）
+    this.updateTankTracks(snapshot.players);
+
+    // 子弹拖尾
+    this.effects.renderBulletTrails(this.ctx, snapshot.bullets);
+    snapshot.bullets.forEach(b => this.effects.updateBulletTrail(b.bulletId, b.x, b.y));
+
     this.renderTanks(snapshot.players);
     this.renderBullets(snapshot.bullets);
     this.explosions.render(this.ctx);
+    this.effects.renderParticles(this.ctx, dt);
+
+    // 环境光（爆炸闪光）
+    this.effects.renderAmbientLights(this.ctx);
+
+    // 天气粒子（最上层）
+    this.effects.renderWeather(this.ctx, dt);
+
     this.renderHUD(snapshot);
+    this.ctx.restore();
+  }
+
+  private updateTankTracks(players: PlayerSnapshot[]): void {
+    for (const player of players) {
+      if (!player.alive) continue;
+      const size = player.size ?? GAME_CONFIG.tankSize;
+      const angle = DIRECTION_ANGLE[player.direction] ?? 0;
+      const prev = this.prevTankPositions.get(player.playerId);
+      if (prev) {
+        const dist = Math.hypot(player.x - prev.x, player.y - prev.y);
+        if (dist > 4) {
+          this.effects.addTrackMark(player.x, player.y, angle);
+        }
+      }
+      this.prevTankPositions.set(player.playerId, { x: player.x, y: player.y, angle });
+    }
   }
 
   private clear(mapTheme = "grass_jungle"): void {
@@ -74,6 +157,47 @@ export class GameRenderer {
       this.ctx.fillStyle = MAP_THEME_FALLBACKS[mapTheme] ?? MAP_THEME_FALLBACKS.grass_jungle;
       this.ctx.fillRect(0, 0, GAME_CONFIG.mapWidth, GAME_CONFIG.mapHeight);
     }
+  }
+
+  private renderDashEffects(snapshot: WorldSnapshot): void {
+    const now = Date.now();
+    const DASH_DURATION = 300;
+
+    this.dashEffects = this.dashEffects.filter((dash) => {
+      const elapsed = now - dash.startTime;
+      if (elapsed >= DASH_DURATION) return false;
+
+      const t = elapsed / DASH_DURATION;
+      const size = GAME_CONFIG.tankSize;
+
+      // 残影拖尾：从 from 到 to 的渐变线
+      const alpha = (1 - t) * 0.6;
+      this.ctx.strokeStyle = dash.color;
+      this.ctx.globalAlpha = alpha;
+      this.ctx.lineWidth = size * 0.4;
+      this.ctx.lineCap = "round";
+      this.ctx.beginPath();
+      this.ctx.moveTo(dash.fromX, dash.fromY);
+      this.ctx.lineTo(dash.toX, dash.toY);
+      this.ctx.stroke();
+
+      // 起点残影方块
+      this.ctx.globalAlpha = alpha * 0.5;
+      this.ctx.fillStyle = dash.color;
+      this.ctx.fillRect(dash.fromX - size / 2, dash.fromY - size / 2, size, size);
+
+      // 终点闪光
+      if (t < 0.3) {
+        const flashAlpha = (1 - t / 0.3) * 0.8;
+        this.ctx.globalAlpha = flashAlpha;
+        this.ctx.strokeStyle = "#fff";
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(dash.toX - size / 2 - 3, dash.toY - size / 2 - 3, size + 6, size + 6);
+      }
+
+      this.ctx.globalAlpha = 1;
+      return true;
+    });
   }
 
   private renderObstacles(obstacles: WorldSnapshot["obstacles"]): void {
@@ -166,31 +290,89 @@ export class GameRenderer {
 
   // 技能球：脉动光环 + 分类颜色 + 效果首字
   private renderPowerups(powerups: PowerupSnapshot[]): void {
-    const pulse = 0.85 + Math.sin(Date.now() / 220) * 0.15;
+    const now = Date.now();
 
     for (const powerup of powerups) {
       const config = POWERUP_CONFIG[powerup.type];
-      const radius = (powerup.size / 2) * pulse;
+      const color = config?.color ?? "#ffffff";
+      const label = config?.label ?? "?";
+      const baseRadius = powerup.size / 2;
+      const pulse = 0.88 + Math.sin(now / 250 + powerup.x * 0.01) * 0.12;
+      const radius = baseRadius * pulse;
+      const float = Math.sin(now / 400 + powerup.y * 0.01) * 2;
+      const cy = powerup.y + float;
 
       this.ctx.save();
+
+      // 外发光
+      const glowGrad = this.ctx.createRadialGradient(
+        powerup.x, cy, 0,
+        powerup.x, cy, radius * 2.5
+      );
+      glowGrad.addColorStop(0, color + "66");
+      glowGrad.addColorStop(0.5, color + "22");
+      glowGrad.addColorStop(1, "transparent");
+      this.ctx.fillStyle = glowGrad;
+      this.ctx.fillRect(
+        powerup.x - radius * 2.5, cy - radius * 2.5,
+        radius * 5, radius * 5
+      );
+
+      // 阴影
       this.ctx.beginPath();
-      this.ctx.arc(powerup.x, powerup.y, radius + 4, 0, Math.PI * 2);
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      this.ctx.ellipse(powerup.x, powerup.y + baseRadius * 0.7, baseRadius * 0.7, baseRadius * 0.25, 0, 0, Math.PI * 2);
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
       this.ctx.fill();
 
+      // 旋转光环
+      this.ctx.translate(powerup.x, cy);
+      this.ctx.rotate(now / 800);
       this.ctx.beginPath();
-      this.ctx.arc(powerup.x, powerup.y, radius, 0, Math.PI * 2);
-      this.ctx.fillStyle = config?.color ?? "#ffffff";
-      this.ctx.fill();
+      this.ctx.arc(0, 0, radius + 5, 0, Math.PI * 1.4);
+      this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 2;
+      this.ctx.globalAlpha = 0.6;
+      this.ctx.stroke();
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx.globalAlpha = 1;
+
+      // 主体球体（径向渐变）
+      this.ctx.beginPath();
+      this.ctx.arc(powerup.x, cy, radius, 0, Math.PI * 2);
+      const ballGrad = this.ctx.createRadialGradient(
+        powerup.x - radius * 0.3, cy - radius * 0.3, 0,
+        powerup.x, cy, radius
+      );
+      ballGrad.addColorStop(0, "#ffffff");
+      ballGrad.addColorStop(0.3, color);
+      ballGrad.addColorStop(1, color);
+      this.ctx.fillStyle = ballGrad;
+      this.ctx.fill();
+
+      // 高光
+      this.ctx.beginPath();
+      this.ctx.arc(powerup.x - radius * 0.25, cy - radius * 0.25, radius * 0.3, 0, Math.PI * 2);
+      this.ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      this.ctx.fill();
+
+      // 白色描边
+      this.ctx.beginPath();
+      this.ctx.arc(powerup.x, cy, radius, 0, Math.PI * 2);
       this.ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+      this.ctx.lineWidth = 2;
       this.ctx.stroke();
 
-      this.ctx.font = "bold 12px Arial";
-      this.ctx.fillStyle = "#1b1b1b";
+      // 标签文字（球体色加深做底，白色做面）
+      this.ctx.font = "bold 13px Arial";
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
-      this.ctx.fillText(config?.label.slice(0, 1) ?? "?", powerup.x, powerup.y);
+      // 底层：球体色加深
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      this.ctx.fillText(label.slice(0, 1), powerup.x, cy + 1);
+      // 面层：纯白
+      this.ctx.fillStyle = "#fff";
+      this.ctx.fillText(label.slice(0, 1), powerup.x, cy);
+
       this.ctx.restore();
       this.ctx.textBaseline = "alphabetic";
     }
