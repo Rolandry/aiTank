@@ -83,6 +83,8 @@ function handleMessage(
         playerId: ctx.playerId,
         isHost: true,
       });
+      // 先发 room_created 再广播大厅状态，保证创建者不丢 lobby_update
+      room.broadcastLobby();
       return;
     }
 

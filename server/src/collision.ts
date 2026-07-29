@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from "./protocol";
-import { OBSTACLES } from "./map";
+import type { ObstacleSnapshot } from "./protocol";
 import type { Direction } from "./types";
 
 export interface Rect {
@@ -30,8 +30,8 @@ export function bulletRect(cx: number, cy: number): Rect {
   return { x: cx - B / 2, y: cy - B / 2, width: B, height: B };
 }
 
-export function hitsObstacle(rect: Rect): boolean {
-  return OBSTACLES.some((o) => aabbOverlap(rect, o));
+export function hitsObstacle(rect: Rect, obstacles: ObstacleSnapshot[]): boolean {
+  return obstacles.some((o) => aabbOverlap(rect, o));
 }
 
 export function insideMap(rect: Rect): boolean {

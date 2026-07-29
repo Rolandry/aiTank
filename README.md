@@ -167,6 +167,19 @@ http://<主机IP>:3000
 | 能否 ping 通 | `ping <主机IP>` |
 | 主机服务是否启动 | 确认服务端和客户端都在运行 |
 
+### Chrome 报 ERR_ADDRESS_UNREACHABLE，但 Safari 正常 / ping 通 / 防火墙已关
+
+这是 **Chrome 本地状态问题**，与网络和主机无关（可用终端验证：`curl --noproxy '*' http://<主机IP>:3000` 返回 200 即证明网络层正常）。按顺序尝试：
+
+1. **Cmd+Q 完全退出 Chrome 再重开**（是退出应用，不是关窗口）
+2. 清除网络内部缓存：
+   - 打开 `chrome://net-internals/#sockets` → 点 **Flush socket pools**
+   - 打开 `chrome://net-internals/#dns` → 点 **Clear host cache**
+3. **关闭安全 DNS**：`chrome://settings/security` → "使用安全 DNS" 关闭
+4. **无痕窗口**打开地址测试：若无痕正常，说明是某个扩展在拦截（`chrome://extensions` 停用代理/VPN/安全类扩展）
+5. 打开 `chrome://policy` 检查是否有企业下发的代理策略
+6. 最后手段：`chrome://settings/reset` 重置浏览器设置
+
 ### 提示"无法连接到服务器"
 
 | 检查项 | 操作 |

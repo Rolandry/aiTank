@@ -1,6 +1,12 @@
 import { WebSocket } from "ws";
 import { GAME_CONFIG, PLAYER_COLORS } from "./protocol";
-import type { LobbyUpdate, PlayerInfo, ServerMessage } from "./protocol";
+import type {
+  LobbyUpdate,
+  ObstacleSnapshot,
+  PlayerInfo,
+  ServerMessage,
+} from "./protocol";
+import { generateRandomObstacles } from "./map";
 import { GameWorld } from "./game";
 import type { RoomStatus, ServerPlayer } from "./types";
 
@@ -16,6 +22,7 @@ export class Room {
   game: GameWorld | null = null;
   winnerId: string | null = null;
   isDraw = false;
+  obstacles: ObstacleSnapshot[] = []; // 开局时随机生成
   private countdownTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -47,7 +54,9 @@ export class Room {
     };
     this.players.set(playerId, player);
     if (!this.hostId) this.hostId = playerId;
-    this.broadcastLobby();
+    // 注意：不在此处广播 lobby_update。
+    // 调用方必须先把 room_created/room_joined 发给当前连接，
+    // 再调 broadcastLobby()，否则客户端还在首页，会丢弃大厅消息。
     return player;
   }
 
@@ -119,6 +128,7 @@ export class Room {
 
   private beginPlay(): void {
     this.status = "playing";
+    this.obstacles = generateRandomObstacles(); // 每局随机地图
     this.game = new GameWorld(this);
     this.game.start();
     this.broadcast({ type: "countdown", seconds: 0 });
@@ -158,16 +168,19 @@ export class Room {
     }
   }
 
-  broadcastLobby(): void {
-    const players: PlayerInfo[] = [...this.players.values()].map((p) => ({
+  getPlayerList(): PlayerInfo[] {
+    return [...this.players.values()].map((p) => ({
       playerId: p.playerId,
       nickname: p.nickname,
       color: p.color,
       isHost: p.playerId === this.hostId,
     }));
+  }
+
+  broadcastLobby(): void {
     const msg: LobbyUpdate = {
       type: "lobby_update",
-      players,
+      players: this.getPlayerList(),
       hostId: this.hostId,
       canStart:
         this.status === "waiting" &&
@@ -262,14 +275,11 @@ export class RoomManager {
       roomId,
       playerId,
       isHost: player.playerId === room.hostId,
-      players: [...room.players.values()].map((p) => ({
-        playerId: p.playerId,
-        nickname: p.nickname,
-        color: p.color,
-        isHost: p.playerId === room.hostId,
-      })),
+      players: room.getPlayerList(),
       gameStatus: "waiting",
     });
+    // 先发 room_joined 再广播大厅状态，保证新加入者不丢 lobby_update
+    room.broadcastLobby();
     return "player";
   }
 

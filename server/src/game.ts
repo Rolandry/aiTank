@@ -4,7 +4,7 @@ import type {
   PlayerSnapshot,
   WorldSnapshot,
 } from "./protocol";
-import { OBSTACLES, SPAWN_POINTS } from "./map";
+import { SPAWN_POINTS } from "./map";
 import {
   aabbOverlap,
   bulletRect,
@@ -133,7 +133,7 @@ export class GameWorld {
 
   private canPlaceTank(cx: number, cy: number): boolean {
     const rect = tankRect(cx, cy);
-    return insideMap(rect) && !hitsObstacle(rect);
+    return insideMap(rect) && !hitsObstacle(rect, this.room.obstacles);
   }
 
   private moveBullets(dt: number): void {
@@ -150,7 +150,7 @@ export class GameWorld {
         toRemove.push(b.bulletId);
         continue;
       }
-      if (hitsObstacle(rect)) {
+      if (hitsObstacle(rect, this.room.obstacles)) {
         toRemove.push(b.bulletId);
         continue;
       }
@@ -263,7 +263,7 @@ export class GameWorld {
         x: Math.round(b.x * 100) / 100,
         y: Math.round(b.y * 100) / 100,
       })),
-      obstacles: OBSTACLES,
+      obstacles: this.room.obstacles,
       winnerId: this.room.winnerId,
       isDraw: this.room.isDraw,
     };
