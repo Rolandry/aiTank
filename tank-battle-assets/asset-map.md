@@ -52,7 +52,7 @@
 
 | 文件名 | 像素尺寸 | 网格尺寸 | 配色 |
 |--------|---------|---------|------|
-| bullet_default.png | 12×12 | 0.375×0.375 | #FFFFFF+#FFEB3B |
+| bullet_default.png | 12×12 | 0.375×0.375 | #FFFFFF+#FF5722 |
 
 ## 特效 / effects/
 
