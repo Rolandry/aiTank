@@ -14,11 +14,20 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
     });
   }
 
-  // 障碍物（默认 + 多种类型）
+  // 障碍物（默认 + 4主题×3尺寸 = 12种）
   paths.push({ key: "wall", path: "/assets/obstacles/wall_brick.png" });
-  paths.push({ key: "obstacle_crate", path: "/assets/obstacles/obstacle_grass_jungle_crate_2x2.png" });
-  paths.push({ key: "obstacle_rock", path: "/assets/obstacles/obstacle_grass_jungle_rock_2x1.png" });
-  paths.push({ key: "obstacle_tree", path: "/assets/obstacles/obstacle_grass_jungle_tree_1x1.png" });
+  paths.push({ key: "obstacle_grass_jungle_tree_1x1", path: "/assets/obstacles/obstacle_grass_jungle_tree_1x1.png" });
+  paths.push({ key: "obstacle_grass_jungle_rock_2x1", path: "/assets/obstacles/obstacle_grass_jungle_rock_2x1.png" });
+  paths.push({ key: "obstacle_grass_jungle_crate_2x2", path: "/assets/obstacles/obstacle_grass_jungle_crate_2x2.png" });
+  paths.push({ key: "obstacle_desert_gobi_stone_1x1", path: "/assets/obstacles/obstacle_desert_gobi_stone_1x1.png" });
+  paths.push({ key: "obstacle_desert_gobi_ruins_2x1", path: "/assets/obstacles/obstacle_desert_gobi_ruins_2x1.png" });
+  paths.push({ key: "obstacle_desert_gobi_dune_2x2", path: "/assets/obstacles/obstacle_desert_gobi_dune_2x2.png" });
+  paths.push({ key: "obstacle_snow_tundra_ice_1x1", path: "/assets/obstacles/obstacle_snow_tundra_ice_1x1.png" });
+  paths.push({ key: "obstacle_snow_tundra_snowblock_2x1", path: "/assets/obstacles/obstacle_snow_tundra_snowblock_2x1.png" });
+  paths.push({ key: "obstacle_snow_tundra_crate_2x2", path: "/assets/obstacles/obstacle_snow_tundra_crate_2x2.png" });
+  paths.push({ key: "obstacle_city_ruins_steel_1x1", path: "/assets/obstacles/obstacle_city_ruins_steel_1x1.png" });
+  paths.push({ key: "obstacle_city_ruins_wall_2x1", path: "/assets/obstacles/obstacle_city_ruins_wall_2x1.png" });
+  paths.push({ key: "obstacle_city_ruins_barricade_2x2", path: "/assets/obstacles/obstacle_city_ruins_barricade_2x2.png" });
 
   // 子弹
   paths.push({ key: "bullet", path: "/assets/bullets/bullet.png" });

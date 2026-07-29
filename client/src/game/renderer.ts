@@ -64,20 +64,38 @@ export class GameRenderer {
   private renderObstacles(obstacles: WorldSnapshot["obstacles"]): void {
     // 障碍物类型 → 素材映射
     const OBSTACLE_ASSETS: Record<string, string> = {
-      crate: "obstacle_crate",
-      rock: "obstacle_rock",
-      tree: "obstacle_tree",
+      grass_jungle_tree: "obstacle_grass_jungle_tree_1x1",
+      grass_jungle_rock: "obstacle_grass_jungle_rock_2x1",
+      grass_jungle_crate: "obstacle_grass_jungle_crate_2x2",
+      desert_gobi_stone: "obstacle_desert_gobi_stone_1x1",
+      desert_gobi_ruins: "obstacle_desert_gobi_ruins_2x1",
+      desert_gobi_dune: "obstacle_desert_gobi_dune_2x2",
+      snow_tundra_ice: "obstacle_snow_tundra_ice_1x1",
+      snow_tundra_snowblock: "obstacle_snow_tundra_snowblock_2x1",
+      snow_tundra_crate: "obstacle_snow_tundra_crate_2x2",
+      city_ruins_steel: "obstacle_city_ruins_steel_1x1",
+      city_ruins_wall: "obstacle_city_ruins_wall_2x1",
+      city_ruins_barricade: "obstacle_city_ruins_barricade_2x2",
     };
 
     // 障碍物类型 → 降级颜色
     const OBSTACLE_COLORS: Record<string, string> = {
-      crate: "#8B4513",
-      rock: "#808080",
-      tree: "#228B22",
+      grass_jungle_tree: "#228B22",
+      grass_jungle_rock: "#808080",
+      grass_jungle_crate: "#8B4513",
+      desert_gobi_stone: "#a0826d",
+      desert_gobi_ruins: "#c2a170",
+      desert_gobi_dune: "#deb887",
+      snow_tundra_ice: "#b0e0e6",
+      snow_tundra_snowblock: "#f0f8ff",
+      snow_tundra_crate: "#4682b4",
+      city_ruins_steel: "#71797e",
+      city_ruins_wall: "#8b7355",
+      city_ruins_barricade: "#5f5f5f",
     };
 
     for (const obs of obstacles) {
-      const type = obs.type || "crate";
+      const type = obs.type || "grass_jungle_tree";
       const assetKey = OBSTACLE_ASSETS[type] || "wall";
       const img = getAsset(assetKey);
 
