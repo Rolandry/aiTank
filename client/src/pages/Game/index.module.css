@@ -145,3 +145,27 @@
 .backButton:hover {
   background: #f39c12;
 }
+
+/* 静音按钮 */
+.muteButton {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.muteButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+}

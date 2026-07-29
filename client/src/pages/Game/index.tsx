@@ -8,6 +8,7 @@ import {
   enableInput,
   disableInput,
 } from "../../game/input";
+import { audioManager } from "../../game/audio";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
 import type { WorldSnapshot, GameOverEvent } from "../../types/protocol";
 import styles from "./index.module.css";
@@ -52,6 +53,10 @@ export default function Game() {
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
   const [disconnected, setDisconnected] = useState(false);
   const [myAlive, setMyAlive] = useState(true);
+  const [muted, setMuted] = useState(false);
+
+  const myPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const prevBulletIdsRef = useRef<Set<string>>(new Set());
 
   // 初始化渲染器和输入
   useEffect(() => {
@@ -59,10 +64,15 @@ export default function Game() {
       rendererRef.current = new GameRenderer(canvasRef.current);
       rendererRef.current.setMyPlayerId(playerId);
     }
+    audioManager.setMyPlayerId(playerId);
+    audioManager.init().then(() => {
+      audioManager.startBgm();
+    });
     initInput();
     return () => {
       destroyInput();
       disableInput();
+      audioManager.stopBgm();
     };
   }, [playerId]);
 
@@ -130,10 +140,14 @@ export default function Game() {
   useSocketMessage("countdown", (msg) => {
     setCountdown(msg.seconds);
     setGameState("countdown");
+    if (msg.seconds > 0) {
+      audioManager.play("coin", 0.6);
+    }
     if (msg.seconds <= 0) {
       setCountdown(null);
       setGameState("playing");
       if (!isSpectator) enableInput();
+      audioManager.play("coin", 1);
     }
   });
 
@@ -147,7 +161,18 @@ export default function Game() {
     setGameState(msg.status);
 
     const me = msg.players.find((p) => p.playerId === playerId);
-    if (me) setMyAlive(me.alive);
+    if (me) {
+      setMyAlive(me.alive);
+      myPosRef.current = { x: me.x, y: me.y };
+    }
+
+    const currBulletIds = new Set(msg.bullets.map((b) => b.bulletId));
+    for (const bullet of msg.bullets) {
+      if (!prevBulletIdsRef.current.has(bullet.bulletId) && bullet.ownerId === playerId) {
+        audioManager.play("shoot", 1);
+      }
+    }
+    prevBulletIdsRef.current = currBulletIds;
 
     if (msg.status === "playing" && !isSpectator) {
       enableInput();
@@ -160,6 +185,22 @@ export default function Game() {
   // 命中闪红
   useSocketMessage("player_hit", (msg) => {
     rendererRef.current?.flashPlayer(msg.targetId);
+    const target = currSnapshotRef.current?.players.find(
+      (p) => p.playerId === msg.targetId
+    );
+    if (target) {
+      const isMyHit = msg.targetId === playerId;
+      audioManager.playWithDistance(
+        "hit",
+        target.x,
+        target.y,
+        myPosRef.current.x,
+        myPosRef.current.y,
+        isMyHit ? 1 : 0.7
+      );
+    } else {
+      audioManager.play("hit", 0.5);
+    }
   });
 
   // 淘汰爆炸
@@ -169,11 +210,21 @@ export default function Game() {
     );
     if (player) {
       rendererRef.current?.explosions.add(player.x, player.y);
+      const isMe = msg.playerId === playerId;
+      audioManager.playWithDistance(
+        "explosion",
+        player.x,
+        player.y,
+        myPosRef.current.x,
+        myPosRef.current.y,
+        isMe ? 1 : 0.8
+      );
     }
     if (msg.playerId === playerId) {
       setMyAlive(false);
       disableInput();
     }
+    audioManager.play("coin", 0.4);
   });
 
   // 游戏结束
@@ -181,6 +232,8 @@ export default function Game() {
     setGameOver(msg);
     setGameState("finished");
     disableInput();
+    audioManager.stopBgm();
+    audioManager.play("game_over", 0.8);
   });
 
   // 断线检测
@@ -196,8 +249,15 @@ export default function Game() {
   const handleBackToHome = useCallback(() => {
     gameSocket.send({ type: "leave_room" });
     gameSocket.disconnect();
+    audioManager.stopBgm();
     navigate("/");
   }, [navigate]);
+
+  const toggleMute = useCallback(() => {
+    const newMuted = !muted;
+    setMuted(newMuted);
+    audioManager.setMuted(newMuted);
+  }, [muted]);
 
   return (
     <div className={styles.container}>
@@ -210,6 +270,11 @@ export default function Game() {
 
       {/* 游戏画面 */}
       <canvas ref={canvasRef} className={styles.canvas} />
+
+      {/* 静音按钮 */}
+      <button className={styles.muteButton} onClick={toggleMute}>
+        {muted ? "🔇" : "🔊"}
+      </button>
 
       {/* 观战标识 */}
       {isSpectator && <div className={styles.badge}>观战模式</div>}
