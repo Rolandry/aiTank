@@ -6,18 +6,34 @@ let loadPromise: Promise<void> | null = null;
 function getAssetPaths(): Array<{ key: string; path: string }> {
   const paths: Array<{ key: string; path: string }> = [];
 
+  // 坦克：每色1张（默认朝上），渲染时旋转
   for (const color of PLAYER_COLORS) {
-    for (const dir of ["up", "down", "left", "right"]) {
-      paths.push({
-        key: `tank_${color}_${dir}`,
-        path: `/assets/tanks/tank_${color}_${dir}.png`,
-      });
-    }
+    paths.push({
+      key: `tank_${color}`,
+      path: `/assets/tanks/tank_${color}.png`,
+    });
   }
 
+  // 障碍物
   paths.push({ key: "wall", path: "/assets/obstacles/wall_brick.png" });
+
+  // 子弹
   paths.push({ key: "bullet", path: "/assets/bullets/bullet.png" });
-  paths.push({ key: "explosion", path: "/assets/effects/explosion_sheet.png" });
+
+  // 爆炸帧（4个独立文件）
+  for (let i = 1; i <= 4; i++) {
+    const num = String(i).padStart(2, "0");
+    paths.push({
+      key: `explosion_${i}`,
+      path: `/assets/effects/explosion_frame_${num}.png`,
+    });
+  }
+
+  // 地图背景
+  paths.push({
+    key: "map_tile",
+    path: "/assets/maps/map_grass_jungle_tile.png",
+  });
 
   return paths;
 }
@@ -53,11 +69,11 @@ export function getAsset(key: string): HTMLImageElement | null {
 }
 
 export const FALLBACK_COLORS: Record<string, string> = {
-  red: "#e74c3c",
-  blue: "#3498db",
-  green: "#2ecc71",
-  yellow: "#f1c40f",
+  red: "#E53935",
+  blue: "#1E88E5",
+  green: "#43A047",
+  yellow: "#FDD835",
   wall: "#7f8c8d",
-  bullet: "#f39c12",
+  bullet: "#FFEB3B",
   explosion: "#e67e22",
 };

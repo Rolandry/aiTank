@@ -15,7 +15,6 @@ export class ExplosionManager {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    const img = getAsset("explosion");
     const now = Date.now();
     const frameDuration = GAME_CONFIG.explosionFrameDurationMs;
     const totalFrames = GAME_CONFIG.explosionFrameCount;
@@ -26,19 +25,13 @@ export class ExplosionManager {
 
       if (frame >= totalFrames) return false;
 
+      // 加载对应帧的独立图片
+      const img = getAsset(`explosion_${frame + 1}`);
+
       if (img) {
-        ctx.drawImage(
-          img,
-          frame * 64,
-          0,
-          64,
-          64,
-          exp.x - 32,
-          exp.y - 32,
-          64,
-          64
-        );
+        ctx.drawImage(img, exp.x - 32, exp.y - 32, 64, 64);
       } else {
+        // 降级：橙色圆形扩大
         const radius = 10 + frame * 8;
         ctx.fillStyle = FALLBACK_COLORS.explosion;
         ctx.beginPath();

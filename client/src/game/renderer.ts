@@ -7,6 +7,14 @@ import type {
 import { getAsset, FALLBACK_COLORS } from "./assets";
 import { ExplosionManager } from "./explosion";
 
+// 方向 → 旋转角度（弧度）
+const DIRECTION_ANGLE: Record<string, number> = {
+  up: 0,
+  right: Math.PI / 2,
+  down: Math.PI,
+  left: -Math.PI / 2,
+};
+
 export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private myPlayerId: string | null = null;
@@ -37,8 +45,20 @@ export class GameRenderer {
   }
 
   private clear(): void {
-    this.ctx.fillStyle = "#2c3e50";
-    this.ctx.fillRect(0, 0, GAME_CONFIG.mapWidth, GAME_CONFIG.mapHeight);
+    // 尝试用地图瓦片平铺背景
+    const tile = getAsset("map_tile");
+    if (tile) {
+      const tileSize = 64;
+      for (let x = 0; x < GAME_CONFIG.mapWidth; x += tileSize) {
+        for (let y = 0; y < GAME_CONFIG.mapHeight; y += tileSize) {
+          this.ctx.drawImage(tile, x, y, tileSize, tileSize);
+        }
+      }
+    } else {
+      // 降级：纯色背景
+      this.ctx.fillStyle = "#2c3e50";
+      this.ctx.fillRect(0, 0, GAME_CONFIG.mapWidth, GAME_CONFIG.mapHeight);
+    }
   }
 
   private renderObstacles(obstacles: WorldSnapshot["obstacles"]): void {
@@ -58,14 +78,22 @@ export class GameRenderer {
       if (!player.alive) continue;
 
       const isMe = player.playerId === this.myPlayerId;
-      const img = getAsset(`tank_${player.color}_${player.direction}`);
       const size = GAME_CONFIG.tankSize;
       const x = player.x - size / 2;
       const y = player.y - size / 2;
 
+      const img = getAsset(`tank_${player.color}`);
+      const angle = DIRECTION_ANGLE[player.direction] ?? 0;
+
       if (img) {
-        this.ctx.drawImage(img, x, y, size, size);
+        // 旋转绘制坦克（素材默认朝上）
+        this.ctx.save();
+        this.ctx.translate(player.x, player.y);
+        this.ctx.rotate(angle);
+        this.ctx.drawImage(img, -size / 2, -size / 2, size, size);
+        this.ctx.restore();
       } else {
+        // 降级：有色矩形
         this.ctx.fillStyle = FALLBACK_COLORS[player.color] ?? "#999";
         this.ctx.fillRect(x, y, size, size);
       }
