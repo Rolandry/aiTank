@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" shape-rendering="crispEdges">
-  <!-- 草地丛林 · 树木 · 1×1格(32×32px) -->
+  <!-- 草地丛林 · 树木 · 1×1格(32×32px) · 深色版 -->
   <!-- 树冠阴影 -->
-  <rect x="6" y="10" width="20" height="18" fill="#2E7D32"/>
+  <rect x="6" y="10" width="20" height="18" fill="#1B5E20"/>
   <!-- 树冠 -->
-  <rect x="8" y="8" width="16" height="16" fill="#4CAF50"/>
-  <rect x="6" y="12" width="20" height="12" fill="#4CAF50"/>
+  <rect x="8" y="8" width="16" height="16" fill="#2E7D32"/>
+  <rect x="6" y="12" width="20" height="12" fill="#2E7D32"/>
   <!-- 树冠高光 -->
-  <rect x="10" y="10" width="6" height="6" fill="#66BB6A"/>
-  <rect x="18" y="14" width="4" height="4" fill="#66BB6A"/>
+  <rect x="10" y="10" width="6" height="6" fill="#388E3C"/>
+  <rect x="18" y="14" width="4" height="4" fill="#388E3C"/>
   <!-- 树干(中心可见) -->
-  <rect x="14" y="20" width="4" height="6" fill="#5D4037"/>
-  <rect x="14" y="20" width="2" height="6" fill="#795548"/>
+  <rect x="14" y="20" width="4" height="6" fill="#3E2723"/>
+  <rect x="14" y="20" width="2" height="6" fill="#4E342E"/>
 </svg>

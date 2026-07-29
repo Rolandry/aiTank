@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" shape-rendering="crispEdges">
-  <!-- 荒漠戈壁 · 石块 · 1×1格(32×32px) -->
-  <rect x="4" y="6" width="24" height="20" fill="#8D6E63"/>
-  <rect x="6" y="4" width="20" height="22" fill="#A1887F"/>
-  <rect x="4" y="8" width="24" height="16" fill="#A1887F"/>
-  <rect x="8" y="6" width="8" height="6" fill="#BCAAA4"/>
-  <rect x="20" y="10" width="4" height="4" fill="#BCAAA4"/>
-  <rect x="14" y="8" width="2" height="10" fill="#795548"/>
-  <rect x="8" y="22" width="4" height="2" fill="#D4A24E"/>
+  <!-- 荒漠戈壁 · 石块 · 1×1格(32×32px) · 深色版 -->
+  <rect x="4" y="6" width="24" height="20" fill="#5D4037"/>
+  <rect x="6" y="4" width="20" height="22" fill="#795548"/>
+  <rect x="4" y="8" width="24" height="16" fill="#795548"/>
+  <rect x="8" y="6" width="8" height="6" fill="#8D6E63"/>
+  <rect x="20" y="10" width="4" height="4" fill="#8D6E63"/>
+  <rect x="14" y="8" width="2" height="10" fill="#4E342E"/>
+  <rect x="8" y="22" width="4" height="2" fill="#BF8C3E"/>
 </svg>

@@ -1,37 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" shape-rendering="crispEdges">
-  <!-- 城市废墟 · 砖墙 · 2×1格(64×32px) -->
+  <!-- 城市废墟 · 砖墙 · 2×1格(64×32px) · 深色版 -->
   <!-- 砖墙底色 -->
-  <rect x="2" y="4" width="60" height="24" fill="#8D6E63"/>
+  <rect x="2" y="4" width="60" height="24" fill="#5D4037"/>
   <!-- 砖缝(水平) -->
-  <rect x="2" y="4" width="60" height="1" fill="#5D4037"/>
-  <rect x="2" y="11" width="60" height="1" fill="#5D4037"/>
-  <rect x="2" y="18" width="60" height="1" fill="#5D4037"/>
-  <rect x="2" y="25" width="60" height="1" fill="#5D4037"/>
+  <rect x="2" y="4" width="60" height="1" fill="#3E2723"/>
+  <rect x="2" y="11" width="60" height="1" fill="#3E2723"/>
+  <rect x="2" y="18" width="60" height="1" fill="#3E2723"/>
+  <rect x="2" y="25" width="60" height="1" fill="#3E2723"/>
   <!-- 砖缝(垂直) - 奇数行 -->
-  <rect x="14" y="5" width="1" height="6" fill="#5D4037"/>
-  <rect x="28" y="5" width="1" height="6" fill="#5D4037"/>
-  <rect x="42" y="5" width="1" height="6" fill="#5D4037"/>
-  <rect x="56" y="5" width="1" height="6" fill="#5D4037"/>
+  <rect x="14" y="5" width="1" height="6" fill="#3E2723"/>
+  <rect x="28" y="5" width="1" height="6" fill="#3E2723"/>
+  <rect x="42" y="5" width="1" height="6" fill="#3E2723"/>
+  <rect x="56" y="5" width="1" height="6" fill="#3E2723"/>
   <!-- 砖缝(垂直) - 偶数行 -->
-  <rect x="8" y="12" width="1" height="6" fill="#5D4037"/>
-  <rect x="22" y="12" width="1" height="6" fill="#5D4037"/>
-  <rect x="36" y="12" width="1" height="6" fill="#5D4037"/>
-  <rect x="50" y="12" width="1" height="6" fill="#5D4037"/>
+  <rect x="8" y="12" width="1" height="6" fill="#3E2723"/>
+  <rect x="22" y="12" width="1" height="6" fill="#3E2723"/>
+  <rect x="36" y="12" width="1" height="6" fill="#3E2723"/>
+  <rect x="50" y="12" width="1" height="6" fill="#3E2723"/>
   <!-- 砖缝(垂直) - 奇数行3 -->
-  <rect x="14" y="19" width="1" height="6" fill="#5D4037"/>
-  <rect x="28" y="19" width="1" height="6" fill="#5D4037"/>
-  <rect x="42" y="19" width="1" height="6" fill="#5D4037"/>
-  <rect x="56" y="19" width="1" height="6" fill="#5D4037"/>
+  <rect x="14" y="19" width="1" height="6" fill="#3E2723"/>
+  <rect x="28" y="19" width="1" height="6" fill="#3E2723"/>
+  <rect x="42" y="19" width="1" height="6" fill="#3E2723"/>
+  <rect x="56" y="19" width="1" height="6" fill="#3E2723"/>
   <!-- 砖块色差 -->
-  <rect x="3" y="5" width="11" height="6" fill="#A1887F"/>
-  <rect x="15" y="5" width="13" height="6" fill="#795548"/>
-  <rect x="29" y="5" width="13" height="6" fill="#A1887F"/>
-  <rect x="43" y="5" width="13" height="6" fill="#8D6E63"/>
-  <rect x="3" y="12" width="5" height="6" fill="#8D6E63"/>
-  <rect x="9" y="12" width="13" height="6" fill="#A1887F"/>
-  <rect x="23" y="12" width="13" height="6" fill="#795548"/>
-  <rect x="37" y="12" width="13" height="6" fill="#A1887F"/>
-  <rect x="51" y="12" width="11" height="6" fill="#8D6E63"/>
+  <rect x="3" y="5" width="11" height="6" fill="#795548"/>
+  <rect x="15" y="5" width="13" height="6" fill="#4E342E"/>
+  <rect x="29" y="5" width="13" height="6" fill="#795548"/>
+  <rect x="43" y="5" width="13" height="6" fill="#5D4037"/>
+  <rect x="3" y="12" width="5" height="6" fill="#5D4037"/>
+  <rect x="9" y="12" width="13" height="6" fill="#795548"/>
+  <rect x="23" y="12" width="13" height="6" fill="#4E342E"/>
+  <rect x="37" y="12" width="13" height="6" fill="#795548"/>
+  <rect x="51" y="12" width="11" height="6" fill="#5D4037"/>
   <!-- 裂缝 -->
-  <rect x="32" y="4" width="2" height="24" fill="#4E342E"/>
+  <rect x="32" y="4" width="2" height="24" fill="#212121"/>
 </svg>
