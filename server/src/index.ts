@@ -62,7 +62,7 @@ function handleMessage(
 ): void {
   switch (msg.type) {
     case "ping":
-      send(ws, { type: "pong" });
+      send(ws, { type: "pong", timestamp: msg.timestamp, serverTime: Date.now() });
       return;
 
     case "list_rooms": {

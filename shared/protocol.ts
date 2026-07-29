@@ -34,6 +34,7 @@ export type ShootRequest = {
 
 export type PingRequest = {
   type: "ping";
+  timestamp?: number;
 };
 
 export type ListRoomsRequest = {
@@ -176,6 +177,8 @@ export type ObstacleHitEvent = {
 
 export type PongResponse = {
   type: "pong";
+  timestamp?: number;
+  serverTime?: number;
 };
 
 export type RoomListItem = {
@@ -219,7 +222,7 @@ export const GAME_CONFIG = {
   maxHp: 3,
   shootCooldownMs: 500,
   maxBulletsPerPlayer: 3,
-  tickRate: 20,
+  tickRate: 60,
   gameDurationSeconds: 120,
   minPlayers: 2,
   maxPlayers: 4,

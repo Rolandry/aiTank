@@ -10,6 +10,7 @@ export enum ConnectionState {
 
 type MessageHandler = (msg: ServerMessage) => void;
 type StateChangeHandler = (state: ConnectionState) => void;
+type LatencyHandler = (latency: number) => void;
 
 export class GameSocket {
   private ws: WebSocket | null = null;
@@ -26,13 +27,18 @@ export class GameSocket {
   // 心跳
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private heartbeatTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
-  private heartbeatInterval = 30000;
-  private heartbeatTimeout = 10000;
+  private heartbeatInterval = 2000;
+  private heartbeatTimeout = 5000;
 
   // 事件
   private messageHandlers: Map<string, Set<MessageHandler>> = new Map();
   private globalHandlers: Set<MessageHandler> = new Set();
   private stateHandlers: Set<StateChangeHandler> = new Set();
+  private latencyHandlers: Set<LatencyHandler> = new Set();
+
+  // 延迟
+  private latency = 0;
+  private lastPingTime = 0;
 
   // 消息队列
   private pendingMessages: ClientMessage[] = [];
@@ -54,6 +60,8 @@ export class GameSocket {
       this.ws.onopen = () => {
         this.setState(ConnectionState.CONNECTED);
         this.reconnectAttempts = 0;
+        this.lastPingTime = Date.now();
+        this.ws!.send(JSON.stringify({ type: "ping", timestamp: this.lastPingTime }));
         this.startHeartbeat();
         this.flushPending();
         resolve();
@@ -143,6 +151,17 @@ export class GameSocket {
     return this.state === ConnectionState.CONNECTED;
   }
 
+  getLatency(): number {
+    return this.latency;
+  }
+
+  onLatencyChange(handler: LatencyHandler): () => void {
+    this.latencyHandlers.add(handler);
+    return () => {
+      this.latencyHandlers.delete(handler);
+    };
+  }
+
   private handleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       this.setState(ConnectionState.DISCONNECTED);
@@ -167,7 +186,8 @@ export class GameSocket {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: "ping" }));
+        this.lastPingTime = Date.now();
+        this.ws.send(JSON.stringify({ type: "ping", timestamp: this.lastPingTime }));
         this.heartbeatTimeoutTimer = setTimeout(() => {
           this.ws?.close(4000, "heartbeat timeout");
         }, this.heartbeatTimeout);
@@ -198,6 +218,10 @@ export class GameSocket {
       if (this.heartbeatTimeoutTimer) {
         clearTimeout(this.heartbeatTimeoutTimer);
         this.heartbeatTimeoutTimer = null;
+      }
+      if (msg.timestamp && this.lastPingTime) {
+        this.latency = Date.now() - this.lastPingTime;
+        this.latencyHandlers.forEach((h) => h(this.latency));
       }
       return;
     }

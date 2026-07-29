@@ -9,30 +9,11 @@ import {
   disableInput,
 } from "../../game/input";
 import { audioManager } from "../../game/audio";
+import { JitterBuffer } from "../../game/jitterBuffer";
+import { PerfMonitor } from "../../components/PerfMonitor";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
 import type { WorldSnapshot, GameOverEvent } from "../../types/protocol";
 import styles from "./index.module.css";
-
-// 线性插值
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-// 角度插值（处理 360 度环绕）
-function lerpAngle(a: number, b: number, t: number): number {
-  let diff = b - a;
-  if (diff > Math.PI) diff -= 2 * Math.PI;
-  if (diff < -Math.PI) diff += 2 * Math.PI;
-  return a + diff * t;
-}
-
-// 方向角度映射
-const DIRECTION_ANGLE: Record<string, number> = {
-  up: 0,
-  right: Math.PI / 2,
-  down: Math.PI,
-  left: -Math.PI / 2,
-};
 
 export default function Game() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -43,10 +24,9 @@ export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<GameRenderer | null>(null);
 
-  // 双缓存快照用于插值
-  const prevSnapshotRef = useRef<WorldSnapshot | null>(null);
-  const currSnapshotRef = useRef<WorldSnapshot | null>(null);
-  const snapshotTimeRef = useRef<number>(0);
+  // Jitter buffer 吸收网络抖动
+  const jitterBufferRef = useRef<JitterBuffer>(new JitterBuffer());
+  const latestSnapshotRef = useRef<WorldSnapshot | null>(null);
 
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameState, setGameState] = useState<string>("waiting");
@@ -76,59 +56,15 @@ export default function Game() {
     };
   }, [playerId]);
 
-  // 60fps 渲染循环（带插值）
+  // 60fps 渲染循环（从 jitter buffer 取插值快照）
   useEffect(() => {
     let animId: number;
     const loop = () => {
-      if (
-        rendererRef.current &&
-        currSnapshotRef.current &&
-        prevSnapshotRef.current
-      ) {
-        const elapsed = Date.now() - snapshotTimeRef.current;
-        const tickInterval = 1000 / 20; // 20Hz = 50ms
-        const t = Math.min(elapsed / tickInterval, 1);
-
-        // 对玩家位置做插值
-        const interpolatedPlayers = currSnapshotRef.current.players.map(
-          (player) => {
-            const prev = prevSnapshotRef.current?.players.find(
-              (p) => p.playerId === player.playerId
-            );
-            if (!prev) return player;
-
-            return {
-              ...player,
-              x: lerp(prev.x, player.x, t),
-              y: lerp(prev.y, player.y, t),
-            };
-          }
-        );
-
-        // 对子弹位置做插值
-        const interpolatedBullets = currSnapshotRef.current.bullets.map(
-          (bullet) => {
-            const prev = prevSnapshotRef.current?.bullets.find(
-              (b) => b.bulletId === bullet.bulletId
-            );
-            if (!prev) return bullet;
-
-            return {
-              ...bullet,
-              x: lerp(prev.x, bullet.x, t),
-              y: lerp(prev.y, bullet.y, t),
-            };
-          }
-        );
-
-        rendererRef.current.render({
-          ...currSnapshotRef.current,
-          players: interpolatedPlayers,
-          bullets: interpolatedBullets,
-        });
-      } else if (rendererRef.current && currSnapshotRef.current) {
-        // 第一帧没有 prev，直接渲染
-        rendererRef.current.render(currSnapshotRef.current);
+      const interpolated = jitterBufferRef.current.pop();
+      if (rendererRef.current && interpolated) {
+        rendererRef.current.render(interpolated);
+      } else if (rendererRef.current && latestSnapshotRef.current) {
+        rendererRef.current.render(latestSnapshotRef.current);
       }
       animId = requestAnimationFrame(loop);
     };
@@ -153,10 +89,8 @@ export default function Game() {
 
   // 世界快照
   useSocketMessage("world_snapshot", (msg) => {
-    // 保存上一次快照
-    prevSnapshotRef.current = currSnapshotRef.current;
-    currSnapshotRef.current = msg;
-    snapshotTimeRef.current = Date.now();
+    latestSnapshotRef.current = msg;
+    jitterBufferRef.current.push(msg, Date.now());
 
     setGameState(msg.status);
 
@@ -185,7 +119,7 @@ export default function Game() {
   // 命中闪红
   useSocketMessage("player_hit", (msg) => {
     rendererRef.current?.flashPlayer(msg.targetId);
-    const target = currSnapshotRef.current?.players.find(
+    const target = latestSnapshotRef.current?.players.find(
       (p) => p.playerId === msg.targetId
     );
     if (target) {
@@ -205,7 +139,7 @@ export default function Game() {
 
   // 淘汰爆炸
   useSocketMessage("player_eliminated", (msg) => {
-    const player = currSnapshotRef.current?.players.find(
+    const player = latestSnapshotRef.current?.players.find(
       (p) => p.playerId === msg.playerId
     );
     if (player) {
@@ -293,6 +227,9 @@ export default function Game() {
       <button className={styles.muteButton} onClick={toggleMute}>
         {muted ? "🔇" : "🔊"}
       </button>
+
+      {/* 性能监控 */}
+      <PerfMonitor />
 
       {/* 观战标识 */}
       {isSpectator && <div className={styles.badge}>观战模式</div>}

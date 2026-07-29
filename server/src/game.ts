@@ -93,7 +93,7 @@ export class GameWorld {
 
   private step(): void {
     const now = Date.now();
-    const dt = Math.min((now - this.lastTickTime) / 1000, 0.1); // 防卡顿跳变
+    const dt = Math.min((now - this.lastTickTime) / 1000, 0.1);
     this.lastTickTime = now;
     this.tick++;
 
