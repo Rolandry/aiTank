@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { GAME_CONFIG, PLAYER_COLORS } from "./protocol";
 import type {
+  LeaderboardEntry,
   LobbyUpdate,
   ObstacleSnapshot,
   PlayerInfo,
@@ -48,6 +49,8 @@ export class Room {
       hp: GAME_CONFIG.maxHp,
       alive: true,
       hitCount: 0,
+      kills: 0,
+      respawnAt: null,
       lastShootTime: 0,
       activeBullets: 0,
       input: { up: false, down: false, left: false, right: false },
@@ -100,8 +103,8 @@ export class Room {
       player.connected = false;
       if (this.status === "playing" && player.alive) {
         player.alive = false;
-        this.broadcast({ type: "player_eliminated", playerId });
-        // 胜负由 GameWorld 下一个 tick 统一判定
+        player.respawnAt = null; // 断线玩家不复活
+        this.broadcast({ type: "player_eliminated", playerId, killerId: null });
       }
       this.checkEmpty();
     }
@@ -146,7 +149,8 @@ export class Room {
     winnerId: string | null,
     winnerNickname: string | null,
     isDraw: boolean,
-    reason: "last_alive" | "timeout" | "all_disconnected"
+    reason: "last_alive" | "timeout" | "all_disconnected",
+    leaderboard: LeaderboardEntry[]
   ): void {
     if (this.status === "finished") return;
     this.status = "finished";
@@ -160,6 +164,7 @@ export class Room {
       winnerNickname,
       isDraw,
       reason,
+      leaderboard,
     });
   }
 

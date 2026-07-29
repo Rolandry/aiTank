@@ -35,6 +35,7 @@ const POWERUP_WEIGHT: Record<PowerupType, number> = {
   heal: 2,
   rapid: 3, bigshot: 3, spread: 2, pierce: 2, ricochet: 2, power_shot: 2,
 };
+const RESPAWN_DELAY_MS = 3000; // 击杀赛模式：被淘汰后 3 秒复活
 
 export class GameWorld {
   private bullets = new Map<string, ServerBullet>();
@@ -61,6 +62,8 @@ export class GameWorld {
       p.hp = GAME_CONFIG.maxHp;
       p.alive = true;
       p.hitCount = 0;
+      p.kills = 0;
+      p.respawnAt = null;
       p.activeBullets = 0;
       p.lastShootTime = 0;
       p.lastInputSeq = 0;
@@ -342,6 +345,7 @@ export class GameWorld {
     this.moveTanks(dt);
     this.moveBullets(dt);
     this.updatePowerups(now);
+    this.processRespawns(now);
     this.checkGameEnd(now);
 
     if (this.room.status === "playing") {
@@ -528,45 +532,80 @@ export class GameWorld {
     });
     if (target.hp <= 0 && target.alive) {
       target.alive = false;
+      if (owner) owner.kills++;
+      // 击杀赛模式：3 秒后在随机出生点复活（断线玩家由 connected=false 跳过）
+      target.respawnAt = Date.now() + RESPAWN_DELAY_MS;
       this.room.broadcast({
         type: "player_eliminated",
         playerId: target.playerId,
+        killerId: owner?.playerId ?? null,
       });
     }
   }
 
+  // 到期的死亡玩家在随机出生点复活（优先不被存活坦克占用的点）
+  private processRespawns(now: number): void {
+    for (const p of this.room.players.values()) {
+      if (p.alive || !p.connected || p.respawnAt === null) continue;
+      if (now < p.respawnAt) continue;
+      const spawn = this.pickRespawnPoint();
+      p.x = spawn.x;
+      p.y = spawn.y;
+      p.direction = spawn.direction;
+      p.hp = GAME_CONFIG.maxHp;
+      p.alive = true;
+      p.respawnAt = null;
+      p.lastShootTime = 0;
+      p.activeBullets = 0;
+      p.input = { up: false, down: false, left: false, right: false };
+      this.room.broadcast({
+        type: "player_respawn",
+        playerId: p.playerId,
+        x: p.x,
+        y: p.y,
+      });
+    }
+  }
+
+  private pickRespawnPoint(): { x: number; y: number; direction: Direction } {
+    const alive = [...this.room.players.values()].filter((p) => p.alive);
+    const free = SPAWN_POINTS.filter(
+      (s) =>
+        !alive.some((p) => Math.hypot(p.x - s.x, p.y - s.y) < GAME_CONFIG.tankSize)
+    );
+    const pool = free.length > 0 ? free : SPAWN_POINTS;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // 击杀赛模式：唯一结束条件是时间耗尽，结算击杀排行榜
   private checkGameEnd(now: number): void {
     const players = [...this.room.players.values()];
-    const alive = players.filter((p) => p.alive);
 
-    // 条件一：最后存活者（含断线淘汰）
-    if (alive.length <= 1) {
-      const winner = alive[0] ?? null;
-      const anyConnected = players.some((p) => p.connected);
-      this.room.endGame(
-        winner?.playerId ?? null,
-        winner?.nickname ?? null,
-        winner === null, // 无存活者（同归于尽/全部断线）记平局
-        anyConnected ? "last_alive" : "all_disconnected"
-      );
+    // 全部断线：本局无胜者，直接结束
+    if (players.length > 0 && !players.some((p) => p.connected)) {
+      this.room.endGame(null, null, true, "all_disconnected", []);
       return;
     }
 
-    // 条件二：120 秒超时 → 比 HP → 比命中数 → 平局
-    const remaining = this.remainingMs(now);
-    if (remaining <= 0) {
-      const sorted = [...alive].sort(
-        (a, b) => b.hp - a.hp || b.hitCount - a.hitCount
-      );
-      const top = sorted[0];
-      const tied = sorted.filter(
-        (p) => p.hp === top.hp && p.hitCount === top.hitCount
-      );
-      if (tied.length === 1) {
-        this.room.endGame(top.playerId, top.nickname, false, "timeout");
-      } else {
-        this.room.endGame(null, null, true, "timeout");
-      }
+    if (this.remainingMs(now) > 0) return;
+
+    const leaderboard = [...players]
+      .sort((a, b) => b.kills - a.kills || b.hitCount - a.hitCount)
+      .map((p) => ({
+        playerId: p.playerId,
+        nickname: p.nickname,
+        color: p.color,
+        kills: p.kills,
+        hitCount: p.hitCount,
+      }));
+    const top = leaderboard[0];
+    const tied = leaderboard.filter(
+      (e) => e.kills === top.kills && e.hitCount === top.hitCount
+    );
+    if (tied.length === 1) {
+      this.room.endGame(top.playerId, top.nickname, false, "timeout", leaderboard);
+    } else {
+      this.room.endGame(null, null, true, "timeout", leaderboard);
     }
   }
 
@@ -598,6 +637,7 @@ export class GameWorld {
           0,
           p.lastDashTime + this.dashCooldown(p) - now
         ),
+        kills: p.kills,
       })
     );
     return {

@@ -22,6 +22,8 @@ export interface ServerPlayer {
   hp: number;
   alive: boolean;
   hitCount: number;
+  kills: number; // 击杀数（击杀赛模式）
+  respawnAt: number | null; // 复活时间戳（死亡时设置，null 表示无需复活）
   lastShootTime: number;
   activeBullets: number;
   input: InputState;

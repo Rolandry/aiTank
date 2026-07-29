@@ -29,6 +29,14 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
   paths.push({ key: "obstacle_city_ruins_wall_2x1", path: "/assets/obstacles/obstacle_city_ruins_wall_2x1.png" });
   paths.push({ key: "obstacle_city_ruins_barricade_2x2", path: "/assets/obstacles/obstacle_city_ruins_barricade_2x2.png" });
 
+  // 击杀标记（每色1张）
+  for (const color of PLAYER_COLORS) {
+    paths.push({
+      key: `kill_marker_${color}`,
+      path: `/assets/kills/kill_marker_${color}.png`,
+    });
+  }
+
   // 子弹
   paths.push({ key: "bullet", path: "/assets/bullets/bullet.png" });
 

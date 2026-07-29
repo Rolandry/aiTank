@@ -163,9 +163,16 @@ export default function Game() {
     }
     if (msg.playerId === playerId) {
       setMyAlive(false);
-      disableInput();
     }
     audioManager.play("coin", 0.4);
+  });
+
+  // 复活（击杀赛模式：3 秒后在随机出生点复活）
+  useSocketMessage("player_respawn", (msg) => {
+    if (msg.playerId === playerId) {
+      setMyAlive(true);
+      if (!isSpectator) enableInput();
+    }
   });
 
   // 游戏结束
@@ -273,25 +280,48 @@ export default function Game() {
       {/* 观战标识 */}
       {isSpectator && <div className={styles.badge}>观战模式</div>}
 
-      {/* 被淘汰提示 */}
+      {/* 被淘汰提示（击杀赛模式：3 秒后复活） */}
       {!isSpectator && !myAlive && gameState === "playing" && (
         <div className={styles.eliminatedOverlay}>
-          <p>你已被淘汰</p>
-          <p>观战中...</p>
+          <p>你被击杀了</p>
+          <p>3 秒后复活...</p>
         </div>
       )}
 
-      {/* 游戏结束 */}
+      {/* 游戏结束：击杀排行榜 */}
       {gameOver && (
         <div className={styles.gameOverOverlay}>
           <h2>
             {gameOver.isDraw
               ? "平局！"
-              : `${gameOver.winnerNickname} 获胜！`}
+              : `${gameOver.winnerNickname} 荣登榜首！`}
           </h2>
-          {gameOver.winnerId === playerId && <p>你获胜了</p>}
-          {gameOver.winnerId !== playerId && !isSpectator && (
-            <p>你被淘汰了</p>
+          {gameOver.leaderboard && gameOver.leaderboard.length > 0 && (
+            <div className={styles.leaderboard}>
+              {gameOver.leaderboard.map((entry, i) => (
+                <div
+                  key={entry.playerId}
+                  className={`${styles.leaderboardRow} ${
+                    entry.playerId === playerId ? styles.leaderboardRowMe : ""
+                  }`}
+                >
+                  <span className={styles.leaderboardRank}>
+                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`}
+                  </span>
+                  <span
+                    className={styles.leaderboardColorDot}
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className={styles.leaderboardName}>
+                    {entry.nickname}
+                    {entry.playerId === playerId ? "（我）" : ""}
+                  </span>
+                  <span className={styles.leaderboardKills}>
+                    {entry.kills} 杀
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
           <button onClick={handleBackToHome} className={styles.backButton}>
             返回首页

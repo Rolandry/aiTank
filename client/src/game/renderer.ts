@@ -251,6 +251,57 @@ export class GameRenderer {
       }
 
       this.renderPlayerInfo(player, x, y, size);
+      this.renderKillMarkers(player, x, y);
+    }
+  }
+
+  // 击杀标记：坦克上方按 kills 数量渲染一排与自身颜色匹配的图标
+  private renderKillMarkers(
+    player: PlayerSnapshot,
+    x: number,
+    y: number
+  ): void {
+    if (!player.kills || player.kills <= 0) return;
+
+    const size = GAME_CONFIG.tankSize;
+    const iconSize = 12;
+    const gap = 2;
+    const maxIcons = 8;
+    const shown = Math.min(player.kills, maxIcons);
+    const rowWidth = shown * (iconSize + gap) - gap;
+    const startX = x + size / 2 - rowWidth / 2;
+    const iconY = y - 32 - iconSize; // 昵称再上方
+
+    const img = getAsset(`kill_marker_${player.color}`);
+    for (let i = 0; i < shown; i++) {
+      const ix = startX + i * (iconSize + gap);
+      if (img) {
+        this.ctx.drawImage(img, ix, iconY, iconSize, iconSize);
+      } else {
+        // 降级：与坦克同色的实心圆点
+        this.ctx.fillStyle = FALLBACK_COLORS[player.color] ?? "#fff";
+        this.ctx.beginPath();
+        this.ctx.arc(
+          ix + iconSize / 2,
+          iconY + iconSize / 2,
+          iconSize / 2,
+          0,
+          Math.PI * 2
+        );
+        this.ctx.fill();
+      }
+    }
+
+    // 超过 maxIcons 时用 ×N 表示
+    if (player.kills > maxIcons) {
+      this.ctx.font = "bold 11px Arial";
+      this.ctx.fillStyle = "#fff";
+      this.ctx.textAlign = "left";
+      this.ctx.fillText(
+        `×${player.kills}`,
+        startX + rowWidth + 4,
+        iconY + iconSize
+      );
     }
   }
 

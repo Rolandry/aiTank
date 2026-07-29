@@ -145,6 +145,7 @@ export type PlayerSnapshot = {
   shield: number; // 剩余护盾点数
   effects: ActiveEffect[];
   dashCooldownMs: number; // 冲刺剩余冷却
+  kills: number; // 击杀数（击杀赛模式）
 };
 
 export type BulletSnapshot = {
@@ -195,14 +196,33 @@ export type PlayerHitEvent = {
 export type PlayerEliminatedEvent = {
   type: "player_eliminated";
   playerId: string;
+  killerId: string | null; // 击杀者（断线淘汰时为 null）
+};
+
+// 复活事件（击杀赛模式：被淘汰 3 秒后在随机出生点复活）
+export type PlayerRespawnEvent = {
+  type: "player_respawn";
+  playerId: string;
+  x: number;
+  y: number;
+};
+
+// 击杀排行榜条目（按 kills 降序、hitCount 次之）
+export type LeaderboardEntry = {
+  playerId: string;
+  nickname: string;
+  color: string;
+  kills: number;
+  hitCount: number;
 };
 
 export type GameOverEvent = {
   type: "game_over";
-  winnerId: string | null;
+  winnerId: string | null; // 击杀第一（并列第一时为 null）
   winnerNickname: string | null;
   isDraw: boolean;
   reason: "last_alive" | "timeout" | "all_disconnected";
+  leaderboard: LeaderboardEntry[];
 };
 
 // 障碍物被破坏事件
@@ -275,6 +295,7 @@ export type ServerMessage =
   | WorldSnapshot
   | PlayerHitEvent
   | PlayerEliminatedEvent
+  | PlayerRespawnEvent
   | GameOverEvent
   | ObstacleDestroyedEvent
   | ObstacleHitEvent
