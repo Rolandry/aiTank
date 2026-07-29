@@ -16,7 +16,7 @@ function validNickname(n: unknown): n is string {
   return typeof n === "string" && n.length >= 1 && n.length <= 12;
 }
 
-const wss = new WebSocketServer({ port: PORT, path: "/ws" });
+const wss = new WebSocketServer({ host: "0.0.0.0", port: PORT, path: "/ws" });
 
 wss.on("connection", (ws) => {
   const ctx: ClientContext = {
@@ -138,4 +138,4 @@ function handleMessage(
   }
 }
 
-console.log(`[aitank-server] WebSocket listening on ws://localhost:${PORT}/ws`);
+console.log(`[aitank-server] WebSocket listening on ws://0.0.0.0:${PORT}/ws`);

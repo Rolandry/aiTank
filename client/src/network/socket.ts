@@ -215,4 +215,9 @@ export class GameSocket {
   }
 }
 
-export const gameSocket = new GameSocket("ws://localhost:8080/ws");
+// 动态获取 WebSocket 地址：使用当前页面的 hostname，支持局域网访问
+const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const wsHost = window.location.hostname;
+const wsUrl = `${wsProtocol}//${wsHost}:8080/ws`;
+
+export const gameSocket = new GameSocket(wsUrl);
