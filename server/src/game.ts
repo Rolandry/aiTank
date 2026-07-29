@@ -258,8 +258,9 @@ export class GameWorld {
     this.spawnPowerup();
   }
 
-  private spawnPowerup(): void {
-    const position = this.findPowerupPosition();
+  private spawnPowerup(at?: { x: number; y: number }): void {
+    if (this.powerups.size >= GAME_CONFIG.maxPowerups) return;
+    const position = at ? this.findNearbyPosition(at) : this.findPowerupPosition();
     if (!position) return;
 
     const id = `p_${this.powerupSeq++}`;
@@ -274,6 +275,45 @@ export class GameWorld {
       type: "powerup_spawned",
       powerup: this.toPowerupSnapshot(powerup),
     });
+  }
+
+  // 掉落：优先原位，被占据时按距离就近寻找可用格
+  private findNearbyPosition(at: { x: number; y: number }): { x: number; y: number } | null {
+    const cell = GAME_CONFIG.obstacleSize;
+    const baseCol = Math.floor(at.x / cell);
+    const baseRow = Math.floor(at.y / cell);
+
+    for (let radius = 0; radius <= 3; radius++) {
+      const candidates: Array<{ x: number; y: number }> = [];
+      for (let dr = -radius; dr <= radius; dr++) {
+        for (let dc = -radius; dc <= radius; dc++) {
+          if (Math.max(Math.abs(dr), Math.abs(dc)) !== radius) continue;
+          const x = (baseCol + dc) * cell + cell / 2;
+          const y = (baseRow + dr) * cell + cell / 2;
+          if (this.isValidPowerupSpot(x, y)) candidates.push({ x, y });
+        }
+      }
+      if (candidates.length > 0) {
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+    }
+    return null;
+  }
+
+  private isValidPowerupSpot(x: number, y: number): boolean {
+    const cell = GAME_CONFIG.obstacleSize;
+    const rect = {
+      x: x - GAME_CONFIG.powerupSize / 2,
+      y: y - GAME_CONFIG.powerupSize / 2,
+      width: GAME_CONFIG.powerupSize,
+      height: GAME_CONFIG.powerupSize,
+    };
+
+    if (!insideMap(rect)) return false;
+    if (hitsObstacle(rect, this.room.obstacles)) return false;
+    if (SPAWN_POINTS.some((s) => Math.hypot(s.x - x, s.y - y) < cell * 2)) return false;
+    if ([...this.powerups.values()].some((p) => Math.hypot(p.x - x, p.y - y) < cell)) return false;
+    return true;
   }
 
   private pickPowerupType(): PowerupType {
@@ -297,29 +337,59 @@ export class GameWorld {
       const row = Math.floor(Math.random() * rows);
       const x = col * cell + cell / 2;
       const y = row * cell + cell / 2;
-      const rect = {
-        x: x - GAME_CONFIG.powerupSize / 2,
-        y: y - GAME_CONFIG.powerupSize / 2,
-        width: GAME_CONFIG.powerupSize,
-        height: GAME_CONFIG.powerupSize,
-      };
-
-      if (!insideMap(rect)) continue;
-      if (hitsObstacle(rect, this.room.obstacles)) continue;
-      if (SPAWN_POINTS.some((s) => Math.hypot(s.x - x, s.y - y) < cell * 2)) continue;
-      if ([...this.powerups.values()].some((p) => Math.hypot(p.x - x, p.y - y) < cell)) continue;
-      return { x, y };
+      if (this.isValidPowerupSpot(x, y)) return { x, y };
     }
     return null;
   }
 
   private expireEffects(now: number): void {
     for (const player of this.room.players.values()) {
+      let sizeRestored = false;
       for (const [type, expiry] of [...player.effects]) {
         if (expiry > now) continue;
         player.effects.delete(type);
         if (type === "shield") player.shield = 0;
+        // shrink/ghost 到期后碰撞体积或穿越权限变化，可能导致当前位置非法
+        if (type === "shrink" || type === "ghost") sizeRestored = true;
       }
+      if (sizeRestored) this.resolveStuck(player);
+    }
+  }
+
+  // 解卡：尺寸恢复或穿越权限失效后，若当前位置非法则推到最近的合法位置
+  private resolveStuck(player: ServerPlayer): void {
+    if (!player.alive) return;
+    if (this.canPlaceTank(player, player.x, player.y)) return;
+
+    const size = this.tankSize(player);
+    // 搜索半径需覆盖「从障碍中心完全脱出」的距离：半格 + 半个坦克
+    const maxRadius = GAME_CONFIG.obstacleSize / 2 + size / 2 + 4;
+    // 先尝试沿轴微调对齐通道中心，再逐步扩大搜索半径
+    for (let radius = 2; radius <= maxRadius; radius += 2) {
+      const candidates: Array<{ x: number; y: number }> = [
+        { x: player.x, y: player.y - radius },
+        { x: player.x, y: player.y + radius },
+        { x: player.x - radius, y: player.y },
+        { x: player.x + radius, y: player.y },
+        { x: player.x - radius, y: player.y - radius },
+        { x: player.x + radius, y: player.y - radius },
+        { x: player.x - radius, y: player.y + radius },
+        { x: player.x + radius, y: player.y + radius },
+      ];
+      for (const candidate of candidates) {
+        if (this.canPlaceTank(player, candidate.x, candidate.y)) {
+          player.x = candidate.x;
+          player.y = candidate.y;
+          return;
+        }
+      }
+    }
+
+    // 极端情况：附近无合法位置，回退到最近的空闲出生点
+    const spawn = SPAWN_POINTS.find((s) => this.canPlaceTank(player, s.x, s.y));
+    if (spawn) {
+      player.x = spawn.x;
+      player.y = spawn.y;
     }
   }
 
@@ -476,12 +546,18 @@ export class GameWorld {
       if (index !== -1) {
         this.room.obstacles.splice(index, 1);
       }
+      const centerX = obstacle.x + obstacle.width / 2;
+      const centerY = obstacle.y + obstacle.height / 2;
       this.room.broadcast({
         type: "obstacle_destroyed",
         obstacleId: obstacle.obstacleId,
-        x: obstacle.x + obstacle.width / 2,
-        y: obstacle.y + obstacle.height / 2,
+        x: centerX,
+        y: centerY,
       });
+      // 小概率掉落；需在移除障碍后判定，否则落点被自身占据
+      if (Math.random() < GAME_CONFIG.obstacleDropChance) {
+        this.spawnPowerup({ x: centerX, y: centerY });
+      }
       return true;
     }
 
@@ -536,6 +612,10 @@ export class GameWorld {
         playerId: target.playerId,
         killerId: owner?.playerId ?? null,
       });
+      // 击杀必掉：在死亡位置生成随机技能球
+      if (Math.random() < GAME_CONFIG.killDropChance) {
+        this.spawnPowerup({ x: target.x, y: target.y });
+      }
     }
   }
 

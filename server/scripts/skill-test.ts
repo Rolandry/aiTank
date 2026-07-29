@@ -2,6 +2,7 @@ import { GAME_CONFIG, POWERUP_CONFIG } from "../src/protocol";
 import type { ObstacleSnapshot, PowerupType } from "../src/protocol";
 import { GameWorld } from "../src/game";
 import { generateMap } from "../src/map";
+import { tankRect, insideMap, hitsObstacle } from "../src/collision";
 import type { ServerPlayer } from "../src/types";
 
 const results: string[] = [];
@@ -305,6 +306,143 @@ function grantEffect(player: ServerPlayer, type: PowerupType): void {
   check("拾取后移除技能球", powerups.size === 0);
   check("拾取后效果生效", player.effects.has("speed"));
   check("广播拾取事件", events.some((e) => e.type === "powerup_collected"));
+}
+
+// 17. 击杀必掉技能球，且落点合法
+{
+  const { world, players, room } = createHarness([]);
+  const shooter = createPlayer("p1", 300, 400);
+  const target = createPlayer("p2", 360, 400);
+  target.hp = 1;
+  players.set(shooter.playerId, shooter);
+  players.set(target.playerId, target);
+
+  world.handleShoot(shooter);
+  advance(world, 12);
+
+  const balls = world.buildSnapshot().powerups;
+  check("击杀必掉技能球", !target.alive && balls.length >= 1,
+    `alive=${target.alive} balls=${balls.length}`);
+  if (balls.length > 0) {
+    const ball = balls[0];
+    const overlapped = room.obstacles.some(
+      (o) => ball.x - ball.size / 2 < o.x + o.width && ball.x + ball.size / 2 > o.x &&
+        ball.y - ball.size / 2 < o.y + o.height && ball.y + ball.size / 2 > o.y
+    );
+    check("击杀掉落点不与障碍重叠", !overlapped);
+  }
+}
+
+// 18. 摧毁障碍物按概率掉落，且不超过场上上限
+{
+  let dropped = 0;
+  const rounds = 400;
+  for (let i = 0; i < rounds; i++) {
+    const soft: ObstacleSnapshot = {
+      obstacleId: "s1", x: 384, y: 384, width: 64, height: 64,
+      type: "grass_jungle_tree", destructible: true, hp: 1, maxHp: 1,
+    };
+    const { world, players } = createHarness([soft]);
+    const player = createPlayer("p1", 300, 416);
+    players.set(player.playerId, player);
+    const hit = (world as unknown as {
+      handleBulletHitObstacle: (b: unknown, o: ObstacleSnapshot) => boolean;
+    }).handleBulletHitObstacle.bind(world);
+
+    hit({ bulletId: "b", ownerId: "p1", x: 0, y: 0, direction: "right", size: 12, damage: 1, pierce: false, bouncesLeft: 0 }, soft);
+    if (world.buildSnapshot().powerups.length > 0) dropped++;
+  }
+  const rate = dropped / rounds;
+  const expected = GAME_CONFIG.obstacleDropChance;
+  check("障碍掉落概率接近配置值", Math.abs(rate - expected) < 0.08,
+    `rate=${(rate * 100).toFixed(1)}% expected=${(expected * 100).toFixed(0)}%`);
+}
+
+// 19. 掉落受场上上限约束
+{
+  const { world, players } = createHarness([]);
+  const player = createPlayer("p1", 300, 400);
+  players.set(player.playerId, player);
+  const powerups = (world as unknown as {
+    powerups: Map<string, { powerupId: string; type: PowerupType; x: number; y: number }>;
+  }).powerups;
+  const spawn = (world as unknown as {
+    spawnPowerup: (at?: { x: number; y: number }) => void;
+  }).spawnPowerup.bind(world);
+
+  for (let i = 0; i < GAME_CONFIG.maxPowerups + 4; i++) {
+    spawn({ x: 200 + i * 64, y: 600 });
+  }
+  check("掉落不超过场上上限", powerups.size <= GAME_CONFIG.maxPowerups,
+    `size=${powerups.size} max=${GAME_CONFIG.maxPowerups}`);
+}
+
+// 20. 落点被障碍占据时就近寻找可用格
+{
+  const blocker: ObstacleSnapshot = {
+    obstacleId: "b1", x: 384, y: 384, width: 64, height: 64,
+    type: "grass_jungle_rock", destructible: false,
+  };
+  const { world, players } = createHarness([blocker]);
+  players.set("p1", createPlayer("p1", 100, 100));
+  const spawn = (world as unknown as {
+    spawnPowerup: (at?: { x: number; y: number }) => void;
+  }).spawnPowerup.bind(world);
+
+  spawn({ x: 416, y: 416 });
+  const balls = world.buildSnapshot().powerups;
+  const insideBlocker = balls.some(
+    (b) => b.x > blocker.x && b.x < blocker.x + blocker.width &&
+      b.y > blocker.y && b.y < blocker.y + blocker.height
+  );
+  check("被占据时改用邻近空格", balls.length === 1 && !insideBlocker,
+    balls.length ? `at=${balls[0].x},${balls[0].y}` : "none");
+}
+
+// 21. shrink 到期后自动解卡
+{
+  const O = GAME_CONFIG.obstacleSize;
+  const walls: ObstacleSnapshot[] = [];
+  for (let c = 0; c < 16; c++) {
+    walls.push({ obstacleId: `u${c}`, x: c * O, y: 4 * O, width: O, height: O, type: "grass_jungle_rock", destructible: false });
+    walls.push({ obstacleId: `d${c}`, x: c * O, y: 6 * O, width: O, height: O, type: "grass_jungle_rock", destructible: false });
+  }
+  const { world, players } = createHarness(walls);
+  const shrunk = Math.round(GAME_CONFIG.tankSize * 0.75);
+  // 缩小态贴住上墙：恢复原尺寸后该位置必然非法
+  const player = createPlayer("p1", 500, 5 * O + shrunk / 2);
+  player.effects.set("shrink", Date.now() - 1);
+  players.set(player.playerId, player);
+
+  tick(world);
+
+  const rect = tankRect(player.x, player.y, GAME_CONFIG.tankSize);
+  const legal = insideMap(rect) && !hitsObstacle(rect, walls);
+  const canMove = ([[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>).some(([dx, dy]) => {
+    const next = tankRect(player.x + dx * 3, player.y + dy * 3, GAME_CONFIG.tankSize);
+    return insideMap(next) && !hitsObstacle(next, walls);
+  });
+  check("shrink 到期后位置合法", legal, `y=${player.y}`);
+  check("shrink 到期后可正常移动", canMove);
+}
+
+// 22. ghost 到期后不会卡在可破坏障碍内
+{
+  const soft: ObstacleSnapshot = {
+    obstacleId: "s1", x: 448, y: 384, width: 64, height: 64,
+    type: "grass_jungle_tree", destructible: true, hp: 2, maxHp: 2,
+  };
+  const { world, players } = createHarness([soft]);
+  // 停在可破坏障碍正中央，ghost 到期后原位非法
+  const player = createPlayer("p1", 480, 416);
+  player.effects.set("ghost", Date.now() - 1);
+  players.set(player.playerId, player);
+
+  tick(world);
+
+  const rect = tankRect(player.x, player.y, GAME_CONFIG.tankSize);
+  check("ghost 到期后脱离障碍物", insideMap(rect) && !hitsObstacle(rect, [soft]),
+    `pos=${player.x},${player.y}`);
 }
 
 console.log(results.join("\n"));

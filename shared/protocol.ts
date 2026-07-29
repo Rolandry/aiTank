@@ -328,8 +328,10 @@ export const GAME_CONFIG = {
   dashCells: 3, // 冲刺格数
   dashCooldownMs: 20000,
   powerupSize: 32,
-  powerupSpawnIntervalMs: 5000,
+  powerupSpawnIntervalMs: 7000,
   maxPowerups: 6,
+  obstacleDropChance: 0.2, // 摧毁可破坏障碍物的掉落概率
+  killDropChance: 1, // 击杀必掉
 } as const;
 
 // 技能球配置：持续时间为 0 表示立即结算
