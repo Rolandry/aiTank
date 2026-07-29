@@ -14,8 +14,7 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
     });
   }
 
-  // 障碍物（默认 + 4主题×3尺寸 = 12种）
-  paths.push({ key: "wall", path: "/assets/obstacles/wall_brick.png" });
+  // 障碍物（4主题×3尺寸 = 12种）
   paths.push({ key: "obstacle_grass_jungle_tree_1x1", path: "/assets/obstacles/obstacle_grass_jungle_tree_1x1.png" });
   paths.push({ key: "obstacle_grass_jungle_rock_2x1", path: "/assets/obstacles/obstacle_grass_jungle_rock_2x1.png" });
   paths.push({ key: "obstacle_grass_jungle_crate_2x2", path: "/assets/obstacles/obstacle_grass_jungle_crate_2x2.png" });
@@ -41,11 +40,13 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
     });
   }
 
-  // 地图背景
-  paths.push({
-    key: "map_tile",
-    path: "/assets/maps/map_grass_jungle_tile.png",
-  });
+  // 地图背景（按服务端下发的 mapTheme 选择）
+  for (const theme of ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"]) {
+    paths.push({
+      key: `map_${theme}`,
+      path: `/assets/maps/map_${theme}_tile.png`,
+    });
+  }
 
   return paths;
 }

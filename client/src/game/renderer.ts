@@ -15,6 +15,20 @@ const DIRECTION_ANGLE: Record<string, number> = {
   left: -Math.PI / 2,
 };
 
+const MAP_THEME_ASSETS: Record<string, string> = {
+  grass_jungle: "map_grass_jungle",
+  desert_gobi: "map_desert_gobi",
+  snow_tundra: "map_snow_tundra",
+  city_ruins: "map_city_ruins",
+};
+
+const MAP_THEME_FALLBACKS: Record<string, string> = {
+  grass_jungle: "#476b37",
+  desert_gobi: "#b9945f",
+  snow_tundra: "#d6e8ef",
+  city_ruins: "#5f6468",
+};
+
 export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private myPlayerId: string | null = null;
@@ -36,7 +50,7 @@ export class GameRenderer {
   }
 
   render(snapshot: WorldSnapshot): void {
-    this.clear();
+    this.clear(snapshot.mapTheme);
     this.renderObstacles(snapshot.obstacles);
     this.renderTanks(snapshot.players);
     this.renderBullets(snapshot.bullets);
@@ -44,9 +58,9 @@ export class GameRenderer {
     this.renderHUD(snapshot);
   }
 
-  private clear(): void {
-    // 尝试用地图瓦片平铺背景
-    const tile = getAsset("map_tile");
+  private clear(mapTheme = "grass_jungle"): void {
+    const assetKey = MAP_THEME_ASSETS[mapTheme] ?? MAP_THEME_ASSETS.grass_jungle;
+    const tile = getAsset(assetKey);
     if (tile) {
       const tileSize = 64;
       for (let x = 0; x < GAME_CONFIG.mapWidth; x += tileSize) {
@@ -55,8 +69,7 @@ export class GameRenderer {
         }
       }
     } else {
-      // 降级：纯色背景
-      this.ctx.fillStyle = "#2c3e50";
+      this.ctx.fillStyle = MAP_THEME_FALLBACKS[mapTheme] ?? MAP_THEME_FALLBACKS.grass_jungle;
       this.ctx.fillRect(0, 0, GAME_CONFIG.mapWidth, GAME_CONFIG.mapHeight);
     }
   }
@@ -96,7 +109,7 @@ export class GameRenderer {
 
     for (const obs of obstacles) {
       const type = obs.type || "grass_jungle_tree";
-      const assetKey = OBSTACLE_ASSETS[type] || "wall";
+      const assetKey = OBSTACLE_ASSETS[type];
       const img = getAsset(assetKey);
 
       if (img) {

@@ -49,7 +49,7 @@ const THEMES: Record<MapTheme, ThemeConfig> = {
     obstacles: {
       small: { name: "grass_jungle_tree", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
       medium: { name: "grass_jungle_rock", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
-      large: { name: "grass_jungle_crate", gridW: 2, gridH: 2, destructible: true, maxHp: 3 }, // 大型也可破坏，3 HP
+      large: { name: "grass_jungle_crate", gridW: 2, gridH: 2, destructible: true, maxHp: 3 },
     },
   },
   desert_gobi: {
@@ -82,53 +82,186 @@ const THEMES: Record<MapTheme, ThemeConfig> = {
 };
 
 const SPAWN_SAFE_RADIUS = 3 * O; // 出生点安全区 3 格
+const THEMES_ORDER: MapTheme[] = ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"];
+let lastTheme: MapTheme | null = null;
 
 export interface MapData {
   theme: MapTheme;
   obstacles: ObstacleSnapshot[];
 }
 
-// 生成随机主题
+// 生成随机主题：避免连续两局总是同一主题，增强“换地图”的可感知性
 export function randomTheme(): MapTheme {
-  const themes: MapTheme[] = ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"];
-  return themes[Math.floor(Math.random() * themes.length)];
+  const candidates = lastTheme
+    ? THEMES_ORDER.filter((theme) => theme !== lastTheme)
+    : THEMES_ORDER;
+  const selected = candidates[Math.floor(Math.random() * candidates.length)];
+  lastTheme = selected;
+  return selected;
 }
 
-// 生成地图：固定骨架 + 随机填充，确保无重叠
+// 生成地图：自然掩体骨架 + 随机点缀，确保无重叠、出生区安全、全图连通
 export function generateMap(theme?: MapTheme): MapData {
   const selectedTheme = theme || randomTheme();
   const config = THEMES[selectedTheme];
 
-  const obstacles: ObstacleSnapshot[] = [];
-  const occupied = new Set<string>();
-  let id = 0;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const builder = createMapBuilder(config);
 
-  const nextId = () => id++;
+    // 1. 中场由 4 个错落大掩体形成“岛链”，不再堆成十字墙。
+    generateCenterIslands(builder);
 
-  // 1. 中央十字骨架（大型障碍物，不重叠）
-  const cross = generateCenterCross(config.obstacles.large, occupied, nextId);
-  obstacles.push(...cross);
+    // 2. 侧翼连续但留通道的中型掩体，形成战场分区和绕后路径。
+    generateWingCover(builder);
 
-  // 2. 四角障碍物组（中型障碍物，分散布置）
-  const corners = generateCornerObstacles(config.obstacles.medium, occupied, nextId);
-  obstacles.push(...corners);
+    // 3. 角落外沿掩体只做推进保护，避免出生点被关进死路。
+    generateOuterCover(builder);
 
-  // 3. 随机填充（小型障碍物，补充空隙）
-  const fillers = generateRandomFillers(config.obstacles.small, occupied, nextId);
-  obstacles.push(...fillers);
+    // 4. 少量小型点缀打破规则感，同时做局部遮挡。
+    generateRandomDetails(builder);
 
-  // 4. 验证连通性
-  if (!checkConnectivity(obstacles)) {
-    // 如果不连通，移除部分填充障碍物重试
-    return generateMap(selectedTheme);
+    if (checkConnectivity(builder.obstacles)) {
+      return { theme: selectedTheme, obstacles: builder.obstacles };
+    }
   }
 
-  return { theme: selectedTheme, obstacles };
+  // 极端情况下退回保守布局，保证可玩性优先。
+  const fallback = createMapBuilder(config);
+  generateCenterIslands(fallback);
+  return { theme: selectedTheme, obstacles: fallback.obstacles };
 }
 
-// 检查并标记占用
-function markOccupied(occupied: Set<string>, col: number, row: number, gridW: number, gridH: number): boolean {
-  // 检查是否已占用
+interface MapBuilder {
+  config: ThemeConfig;
+  obstacles: ObstacleSnapshot[];
+  occupied: Set<string>;
+  nextId: () => number;
+  place: (template: ObstacleTypeConfig, col: number, row: number) => boolean;
+}
+
+function createMapBuilder(config: ThemeConfig): MapBuilder {
+  let id = 0;
+  const builder: MapBuilder = {
+    config,
+    obstacles: [],
+    occupied: new Set<string>(),
+    nextId: () => id++,
+    place: (template, col, row) => {
+      if (!canPlace(builder.occupied, col, row, template.gridW, template.gridH)) {
+        return false;
+      }
+      markOccupied(builder.occupied, col, row, template.gridW, template.gridH);
+      builder.obstacles.push(createObstacle(template, col * O, row * O, builder.nextId()));
+      return true;
+    },
+  };
+  return builder;
+}
+
+function generateCenterIslands(builder: MapBuilder): void {
+  const { large, medium } = builder.config.obstacles;
+  const variants = [
+    {
+      large: [[5, 4], [9, 4], [5, 7], [9, 7]],
+      medium: [[7, 3], [7, 8]],
+    },
+    {
+      large: [[6, 3], [8, 5], [6, 7], [10, 7]],
+      medium: [[4, 6], [10, 4]],
+    },
+    {
+      large: [[4, 4], [10, 4], [6, 7], [9, 7]],
+      medium: [[7, 5], [7, 8]],
+    },
+  ];
+  const variant = variants[Math.floor(Math.random() * variants.length)];
+
+  for (const [col, row] of variant.large) {
+    builder.place(large, col, row);
+  }
+  for (const [col, row] of variant.medium) {
+    builder.place(medium, col, row);
+  }
+}
+
+function generateWingCover(builder: MapBuilder): void {
+  const { medium } = builder.config.obstacles;
+  const wingPairs = [
+    [[3, 3], [11, 3]],
+    [[2, 5], [12, 5]],
+    [[3, 8], [11, 8]],
+  ];
+
+  for (const pair of wingPairs) {
+    const shouldUse = Math.random() < 0.82;
+    if (!shouldUse) continue;
+    for (const [col, row] of pair) {
+      builder.place(medium, col, row);
+    }
+  }
+}
+
+function generateOuterCover(builder: MapBuilder): void {
+  const { small, medium } = builder.config.obstacles;
+  const outerGroups = [
+    { medium: [4, 1], small: [[1, 4], [5, 2]] },
+    { medium: [10, 1], small: [[14, 4], [10, 2]] },
+    { medium: [4, 10], small: [[1, 7], [5, 9]] },
+    { medium: [10, 10], small: [[14, 7], [10, 9]] },
+  ] as const;
+
+  for (const group of outerGroups) {
+    if (Math.random() < 0.9) {
+      builder.place(medium, group.medium[0], group.medium[1]);
+    }
+    for (const [col, row] of group.small) {
+      if (Math.random() < 0.65) {
+        builder.place(small, col, row);
+      }
+    }
+  }
+}
+
+function generateRandomDetails(builder: MapBuilder): void {
+  const { small } = builder.config.obstacles;
+  const detailCandidates = shuffle([
+    [4, 3], [6, 2], [9, 2], [11, 4],
+    [1, 5], [5, 5], [10, 6], [14, 6],
+    [4, 8], [6, 9], [9, 9], [11, 8],
+    [7, 1], [8, 10], [2, 7], [13, 4],
+  ]);
+  const count = 5 + Math.floor(Math.random() * 4);
+
+  let placed = 0;
+  for (const [col, row] of detailCandidates) {
+    if (placed >= count) break;
+    if (builder.place(small, col, row)) {
+      placed++;
+    }
+  }
+}
+
+function shuffle<T>(items: T[]): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function canPlace(
+  occupied: Set<string>,
+  col: number,
+  row: number,
+  gridW: number,
+  gridH: number
+): boolean {
+  if (col < 0 || row < 0 || col + gridW > COLS || row + gridH > ROWS) {
+    return false;
+  }
+  if (isNearSpawn(col * O, row * O, gridW, gridH)) {
+    return false;
+  }
   for (let dc = 0; dc < gridW; dc++) {
     for (let dr = 0; dr < gridH; dr++) {
       if (occupied.has(`${col + dc},${row + dr}`)) {
@@ -136,126 +269,21 @@ function markOccupied(occupied: Set<string>, col: number, row: number, gridW: nu
       }
     }
   }
-  // 标记占用
+  return true;
+}
+
+function markOccupied(
+  occupied: Set<string>,
+  col: number,
+  row: number,
+  gridW: number,
+  gridH: number
+): void {
   for (let dc = 0; dc < gridW; dc++) {
     for (let dr = 0; dr < gridH; dr++) {
       occupied.add(`${col + dc},${row + dr}`);
     }
   }
-  return true;
-}
-
-// 中央十字骨架：确保不重叠
-function generateCenterCross(
-  template: ObstacleTypeConfig,
-  occupied: Set<string>,
-  nextId: () => number
-): ObstacleSnapshot[] {
-  const obstacles: ObstacleSnapshot[] = [];
-
-  // 水平线：行 5-6，列 6-9（4 个大型障碍物）
-  for (let col = 6; col <= 9; col++) {
-    // 上行
-    if (markOccupied(occupied, col, 5, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, col * O, 5 * O, nextId()));
-    }
-    // 下行
-    if (markOccupied(occupied, col, 6, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, col * O, 6 * O, nextId()));
-    }
-  }
-
-  // 垂直线：列 7-8，行 3-4 和 7-8（跳过交叉点 5-6）
-  for (let row = 3; row <= 4; row++) {
-    // 左列
-    if (markOccupied(occupied, 7, row, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, 7 * O, row * O, nextId()));
-    }
-    // 右列
-    if (markOccupied(occupied, 8, row, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, 8 * O, row * O, nextId()));
-    }
-  }
-  for (let row = 7; row <= 8; row++) {
-    // 左列
-    if (markOccupied(occupied, 7, row, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, 7 * O, row * O, nextId()));
-    }
-    // 右列
-    if (markOccupied(occupied, 8, row, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, 8 * O, row * O, nextId()));
-    }
-  }
-
-  return obstacles;
-}
-
-// 四角障碍物组：分散布置，不重叠
-function generateCornerObstacles(
-  template: ObstacleTypeConfig,
-  occupied: Set<string>,
-  nextId: () => number
-): ObstacleSnapshot[] {
-  const obstacles: ObstacleSnapshot[] = [];
-  const corners = [
-    { baseCol: 1, baseRow: 1, dirX: 1, dirY: 1 },   // P1 左上
-    { baseCol: 14, baseRow: 1, dirX: -1, dirY: 1 },  // P2 右上
-    { baseCol: 1, baseRow: 10, dirX: 1, dirY: -1 },  // P3 左下
-    { baseCol: 14, baseRow: 10, dirX: -1, dirY: -1 }, // P4 右下
-  ];
-
-  for (const corner of corners) {
-    // 每个角生成 2 个障碍物，分散在不同位置
-    const positions = [
-      { dx: 3, dy: 1 },  // 横向偏移
-      { dx: 1, dy: 3 },  // 纵向偏移
-    ];
-
-    for (const pos of positions) {
-      const col = corner.baseCol + corner.dirX * pos.dx;
-      const row = corner.baseRow + corner.dirY * pos.dy;
-
-      // 确保在地图范围内
-      if (col < 0 || col >= COLS - template.gridW || row < 0 || row >= ROWS - template.gridH) continue;
-
-      // 检查是否在出生点安全区
-      if (isNearSpawn(col * O, row * O)) continue;
-
-      if (markOccupied(occupied, col, row, template.gridW, template.gridH)) {
-        obstacles.push(createObstacle(template, col * O, row * O, nextId()));
-      }
-    }
-  }
-
-  return obstacles;
-}
-
-// 随机填充：小型障碍物，补充空隙
-function generateRandomFillers(
-  template: ObstacleTypeConfig,
-  occupied: Set<string>,
-  nextId: () => number
-): ObstacleSnapshot[] {
-  const obstacles: ObstacleSnapshot[] = [];
-  const count = 5 + Math.floor(Math.random() * 3); // 5-7 个
-
-  let attempts = 0;
-  while (obstacles.length < count && attempts < count * 5) {
-    attempts++;
-
-    // 随机位置（避开边缘和中央）
-    const col = 1 + Math.floor(Math.random() * (COLS - 3));
-    const row = 1 + Math.floor(Math.random() * (ROWS - 3));
-
-    // 检查是否在出生点安全区
-    if (isNearSpawn(col * O, row * O)) continue;
-
-    if (markOccupied(occupied, col, row, template.gridW, template.gridH)) {
-      obstacles.push(createObstacle(template, col * O, row * O, nextId()));
-    }
-  }
-
-  return obstacles;
 }
 
 function createObstacle(
@@ -277,11 +305,11 @@ function createObstacle(
   };
 }
 
-// 检查是否靠近出生点
-function isNearSpawn(x: number, y: number): boolean {
+// 检查是否靠近出生点；按障碍物中心点计算，保证初始移动空间。
+function isNearSpawn(x: number, y: number, gridW = 1, gridH = 1): boolean {
   for (const spawn of SPAWN_POINTS) {
-    const dx = x + O / 2 - spawn.x;
-    const dy = y + O / 2 - spawn.y;
+    const dx = x + (gridW * O) / 2 - spawn.x;
+    const dy = y + (gridH * O) / 2 - spawn.y;
     if (dx * dx + dy * dy < SPAWN_SAFE_RADIUS * SPAWN_SAFE_RADIUS) {
       return true;
     }
