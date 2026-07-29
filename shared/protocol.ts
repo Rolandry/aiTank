@@ -119,7 +119,7 @@ export type ObstacleSnapshot = {
   y: number;
   width: number;
   height: number;
-  type: "small" | "medium" | "large"; // 障碍物类型
+  type: string; // 障碍物类型：grass_jungle_tree / desert_gobi_stone 等
   destructible: boolean; // 是否可破坏
   hp?: number; // 当前生命值（可破坏障碍物）
   maxHp?: number; // 最大生命值（可破坏障碍物）
