@@ -120,6 +120,7 @@ export type ObstacleSnapshot = {
   y: number;
   width: number;
   height: number;
+  rotation?: 0 | 90; // 素材朝向；90 表示纵向墙段
   type: string; // 障碍物类型：grass_jungle_tree / desert_gobi_stone 等
   destructible: boolean; // 是否可破坏
   hp?: number; // 当前生命值（可破坏障碍物）

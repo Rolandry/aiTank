@@ -2,9 +2,10 @@ import { GAME_CONFIG } from "./protocol";
 import type { ObstacleSnapshot } from "./protocol";
 import type { Direction } from "./types";
 
-const O = GAME_CONFIG.obstacleSize; // 64
-const COLS = Math.floor(GAME_CONFIG.mapWidth / O); // 16
-const ROWS = Math.floor(GAME_CONFIG.mapHeight / O); // 12
+const O = GAME_CONFIG.obstacleSize;
+const COLS = Math.floor(GAME_CONFIG.mapWidth / O);
+const ROWS = Math.floor(GAME_CONFIG.mapHeight / O);
+const SPAWN_SAFE_RADIUS = 2.25 * O;
 
 export interface SpawnPoint {
   x: number;
@@ -12,34 +13,43 @@ export interface SpawnPoint {
   direction: Direction;
 }
 
-// 四角出生点（坦克中心坐标），朝向战场内侧
 export const SPAWN_POINTS: SpawnPoint[] = [
-  { x: 88, y: 88, direction: "down" }, // P1 左上
-  { x: 936, y: 88, direction: "down" }, // P2 右上
-  { x: 88, y: 680, direction: "up" }, // P3 左下
-  { x: 936, y: 680, direction: "up" }, // P4 右下
+  { x: 88, y: 88, direction: "down" },
+  { x: 936, y: 88, direction: "down" },
+  { x: 88, y: 680, direction: "up" },
+  { x: 936, y: 680, direction: "up" },
 ];
 
-// 地图主题定义
 export type MapTheme = "grass_jungle" | "desert_gobi" | "snow_tundra" | "city_ruins";
+type ObstacleKind = "small" | "medium" | "large";
+type Rotation = 0 | 90;
 
-// 障碍物类型定义（血量与类型挂钩，与大小解耦）
 interface ObstacleTypeConfig {
   name: string;
   gridW: number;
   gridH: number;
   destructible: boolean;
-  maxHp: number; // 血量由类型决定，不由大小决定
+  maxHp: number;
 }
 
 interface ThemeConfig {
   name: string;
   background: string;
-  obstacles: {
-    small: ObstacleTypeConfig;   // 1x1
-    medium: ObstacleTypeConfig;  // 2x1
-    large: ObstacleTypeConfig;   // 2x2
-  };
+  obstacles: Record<ObstacleKind, ObstacleTypeConfig>;
+}
+
+interface TerrainPlacement {
+  kind: ObstacleKind;
+  col: number;
+  row: number;
+  rotation?: Rotation;
+  destructible?: boolean;
+}
+
+interface TerrainBlueprint {
+  name: string;
+  placements: TerrainPlacement[];
+  details: Array<[number, number]>;
 }
 
 const THEMES: Record<MapTheme, ThemeConfig> = {
@@ -48,8 +58,8 @@ const THEMES: Record<MapTheme, ThemeConfig> = {
     background: "map_grass_jungle",
     obstacles: {
       small: { name: "grass_jungle_tree", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
-      medium: { name: "grass_jungle_rock", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
-      large: { name: "grass_jungle_crate", gridW: 2, gridH: 2, destructible: true, maxHp: 3 },
+      medium: { name: "grass_jungle_rock", gridW: 2, gridH: 1, destructible: false, maxHp: 3 },
+      large: { name: "grass_jungle_crate", gridW: 2, gridH: 2, destructible: false, maxHp: 5 },
     },
   },
   desert_gobi: {
@@ -57,31 +67,134 @@ const THEMES: Record<MapTheme, ThemeConfig> = {
     background: "map_desert_gobi",
     obstacles: {
       small: { name: "desert_gobi_stone", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
-      medium: { name: "desert_gobi_ruins", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
-      large: { name: "desert_gobi_dune", gridW: 2, gridH: 2, destructible: true, maxHp: 3 },
+      medium: { name: "desert_gobi_ruins", gridW: 2, gridH: 1, destructible: false, maxHp: 4 },
+      large: { name: "desert_gobi_dune", gridW: 2, gridH: 2, destructible: false, maxHp: 6 },
     },
   },
   snow_tundra: {
     name: "雪地冰原",
     background: "map_snow_tundra",
     obstacles: {
-      small: { name: "snow_tundra_ice", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
-      medium: { name: "snow_tundra_snowblock", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
-      large: { name: "snow_tundra_crate", gridW: 2, gridH: 2, destructible: true, maxHp: 3 },
+      small: { name: "snow_tundra_ice", gridW: 1, gridH: 1, destructible: true, maxHp: 2 },
+      medium: { name: "snow_tundra_snowblock", gridW: 2, gridH: 1, destructible: false, maxHp: 4 },
+      large: { name: "snow_tundra_crate", gridW: 2, gridH: 2, destructible: false, maxHp: 5 },
     },
   },
   city_ruins: {
     name: "城市废墟",
     background: "map_city_ruins",
     obstacles: {
-      small: { name: "city_ruins_steel", gridW: 1, gridH: 1, destructible: true, maxHp: 1 },
-      medium: { name: "city_ruins_wall", gridW: 2, gridH: 1, destructible: true, maxHp: 2 },
-      large: { name: "city_ruins_barricade", gridW: 2, gridH: 2, destructible: true, maxHp: 3 },
+      small: { name: "city_ruins_steel", gridW: 1, gridH: 1, destructible: true, maxHp: 3 },
+      medium: { name: "city_ruins_wall", gridW: 2, gridH: 1, destructible: false, maxHp: 5 },
+      large: { name: "city_ruins_barricade", gridW: 2, gridH: 2, destructible: false, maxHp: 7 },
     },
   },
 };
 
-const SPAWN_SAFE_RADIUS = 3 * O; // 出生点安全区 3 格
+// 每套蓝图借鉴成熟竞技地图的中心争夺、多路径和侧翼绕后原则，
+// 再针对主题塑造不同的地形语言，而不是随机散点摆放。
+const BLUEPRINTS: Record<MapTheme, TerrainBlueprint> = {
+  grass_jungle: {
+    name: "林地双湾",
+    placements: [
+      // 中央不闭合环：四向入口，环内形成争夺区。
+      { kind: "large", col: 5, row: 4 },
+      { kind: "large", col: 9, row: 4 },
+      { kind: "large", col: 5, row: 7 },
+      { kind: "large", col: 9, row: 7 },
+      { kind: "medium", col: 7, row: 3 },
+      { kind: "medium", col: 7, row: 8 },
+      // 左右 L 形掩体湾，均保留上下两个出口。
+      { kind: "medium", col: 2, row: 4 },
+      { kind: "medium", col: 3, row: 5, rotation: 90 },
+      { kind: "medium", col: 12, row: 4 },
+      { kind: "medium", col: 12, row: 5, rotation: 90 },
+      { kind: "medium", col: 2, row: 7 },
+      { kind: "medium", col: 3, row: 6, rotation: 90 },
+      { kind: "medium", col: 12, row: 7 },
+      { kind: "medium", col: 12, row: 6, rotation: 90 },
+      // 树木是可破坏封口，打掉后形成直达环内的捷径。
+      { kind: "small", col: 7, row: 5 },
+      { kind: "small", col: 8, row: 6 },
+    ],
+    details: [[5, 2], [10, 2], [5, 9], [10, 9], [1, 5], [14, 6]],
+  },
+  desert_gobi: {
+    name: "戈壁岛链",
+    placements: [
+      // 大型沙丘形成错位岛链，保留斜向穿插路线。
+      { kind: "large", col: 4, row: 3 },
+      { kind: "large", col: 10, row: 3 },
+      { kind: "large", col: 7, row: 5 },
+      { kind: "large", col: 4, row: 7 },
+      { kind: "large", col: 10, row: 7 },
+      // 短墙连接岛链但不闭合，切割超长射线。
+      { kind: "medium", col: 2, row: 5 },
+      { kind: "medium", col: 12, row: 5 },
+      { kind: "medium", col: 6, row: 3, rotation: 90 },
+      { kind: "medium", col: 9, row: 7, rotation: 90 },
+      { kind: "medium", col: 6, row: 9 },
+      { kind: "medium", col: 8, row: 2 },
+      // 中央左右两扇可破坏石门提供高风险直线捷径。
+      { kind: "small", col: 6, row: 6 },
+      { kind: "small", col: 9, row: 5 },
+    ],
+    details: [[3, 3], [12, 3], [3, 8], [12, 8], [7, 2], [8, 9], [1, 6], [14, 5]],
+  },
+  snow_tundra: {
+    name: "冰墙缺口",
+    placements: [
+      // 两条横向冰墙通过错位缺口形成 S 形主通道。
+      { kind: "medium", col: 3, row: 3 },
+      { kind: "medium", col: 5, row: 3 },
+      { kind: "medium", col: 9, row: 3 },
+      { kind: "medium", col: 11, row: 3 },
+      { kind: "medium", col: 3, row: 8 },
+      { kind: "medium", col: 5, row: 8 },
+      { kind: "medium", col: 9, row: 8 },
+      { kind: "medium", col: 11, row: 8 },
+      // 纵向短墙形成左右侧翼通道和中部交火区。
+      { kind: "medium", col: 3, row: 5, rotation: 90 },
+      { kind: "medium", col: 12, row: 5, rotation: 90 },
+      { kind: "large", col: 6, row: 5 },
+      { kind: "large", col: 9, row: 5 },
+      // 冰块填在墙缺口中，可打穿但不影响外圈基础路线。
+      { kind: "small", col: 7, row: 3 },
+      { kind: "small", col: 8, row: 8 },
+      { kind: "small", col: 5, row: 6 },
+      { kind: "small", col: 10, row: 5 },
+    ],
+    details: [[2, 4], [13, 7], [5, 2], [10, 2], [5, 9], [10, 9]],
+  },
+  city_ruins: {
+    name: "十字街区",
+    placements: [
+      // 四个街区围出十字主路与环形辅路。
+      { kind: "large", col: 4, row: 3 },
+      { kind: "large", col: 10, row: 3 },
+      { kind: "large", col: 4, row: 7 },
+      { kind: "large", col: 10, row: 7 },
+      { kind: "medium", col: 3, row: 5, rotation: 90 },
+      { kind: "medium", col: 12, row: 5, rotation: 90 },
+      { kind: "medium", col: 6, row: 3 },
+      { kind: "medium", col: 8, row: 3 },
+      { kind: "medium", col: 6, row: 8 },
+      { kind: "medium", col: 8, row: 8 },
+      // 街角短墙制造近距离巷战位。
+      { kind: "medium", col: 2, row: 7 },
+      { kind: "medium", col: 12, row: 7 },
+      { kind: "medium", col: 2, row: 4 },
+      { kind: "medium", col: 12, row: 4 },
+      // 钢制路障封住两条巷口，击毁后开放对角穿越。
+      { kind: "small", col: 6, row: 5 },
+      { kind: "small", col: 9, row: 6 },
+      { kind: "small", col: 7, row: 7 },
+      { kind: "small", col: 8, row: 4 },
+    ],
+    details: [[1, 5], [14, 6], [5, 2], [10, 2], [5, 9], [10, 9]],
+  },
+};
+
 const THEMES_ORDER: MapTheme[] = ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"];
 let lastTheme: MapTheme | null = null;
 
@@ -90,7 +203,13 @@ export interface MapData {
   obstacles: ObstacleSnapshot[];
 }
 
-// 生成随机主题：避免连续两局总是同一主题，增强“换地图”的可感知性
+export interface MapValidationResult {
+  valid: boolean;
+  issues: string[];
+  obstacleCount: number;
+  destructibleCount: number;
+}
+
 export function randomTheme(): MapTheme {
   const candidates = lastTheme
     ? THEMES_ORDER.filter((theme) => theme !== lastTheme)
@@ -100,34 +219,32 @@ export function randomTheme(): MapTheme {
   return selected;
 }
 
-// 生成地图：自然掩体骨架 + 随机点缀，确保无重叠、出生区安全、全图连通
 export function generateMap(theme?: MapTheme): MapData {
-  const selectedTheme = theme || randomTheme();
+  const selectedTheme = theme ?? randomTheme();
   const config = THEMES[selectedTheme];
+  const blueprint = BLUEPRINTS[selectedTheme];
 
+  // 镜像提供有限随机性，但保持竞技地图的结构可读性和公平性。
   for (let attempt = 0; attempt < 8; attempt++) {
     const builder = createMapBuilder(config);
+    const mirrorX = Math.random() < 0.5;
+    const mirrorY = Math.random() < 0.5;
 
-    // 1. 中场由 4 个错落大掩体形成“岛链”，不再堆成十字墙。
-    generateCenterIslands(builder);
+    for (const placement of blueprint.placements) {
+      builder.place(transformPlacement(placement, config, mirrorX, mirrorY));
+    }
+    addSymmetricDetails(builder, blueprint.details, mirrorX, mirrorY);
 
-    // 2. 侧翼连续但留通道的中型掩体，形成战场分区和绕后路径。
-    generateWingCover(builder);
-
-    // 3. 角落外沿掩体只做推进保护，避免出生点被关进死路。
-    generateOuterCover(builder);
-
-    // 4. 少量小型点缀打破规则感，同时做局部遮挡。
-    generateRandomDetails(builder);
-
-    if (checkConnectivity(builder.obstacles)) {
+    if (validateGeneratedMap(builder.obstacles).valid) {
       return { theme: selectedTheme, obstacles: builder.obstacles };
     }
   }
 
-  // 极端情况下退回保守布局，保证可玩性优先。
+  // 固定蓝图本身经过校验；仅在随机装饰异常时退回无装饰版本。
   const fallback = createMapBuilder(config);
-  generateCenterIslands(fallback);
+  for (const placement of blueprint.placements) {
+    fallback.place(placement);
+  }
   return { theme: selectedTheme, obstacles: fallback.obstacles };
 }
 
@@ -135,8 +252,7 @@ interface MapBuilder {
   config: ThemeConfig;
   obstacles: ObstacleSnapshot[];
   occupied: Set<string>;
-  nextId: () => number;
-  place: (template: ObstacleTypeConfig, col: number, row: number) => boolean;
+  place: (placement: TerrainPlacement) => boolean;
 }
 
 function createMapBuilder(config: ThemeConfig): MapBuilder {
@@ -145,108 +261,70 @@ function createMapBuilder(config: ThemeConfig): MapBuilder {
     config,
     obstacles: [],
     occupied: new Set<string>(),
-    nextId: () => id++,
-    place: (template, col, row) => {
-      if (!canPlace(builder.occupied, col, row, template.gridW, template.gridH)) {
+    place: (placement) => {
+      const template = config.obstacles[placement.kind];
+      const rotation = placement.rotation ?? 0;
+      const { gridW, gridH } = getRotatedSize(template, rotation);
+      if (!canPlace(builder.occupied, placement.col, placement.row, gridW, gridH)) {
         return false;
       }
-      markOccupied(builder.occupied, col, row, template.gridW, template.gridH);
-      builder.obstacles.push(createObstacle(template, col * O, row * O, builder.nextId()));
+
+      markOccupied(builder.occupied, placement.col, placement.row, gridW, gridH);
+      builder.obstacles.push(createObstacle(
+        template,
+        placement.col,
+        placement.row,
+        gridW,
+        gridH,
+        rotation,
+        placement.destructible,
+        id++
+      ));
       return true;
     },
   };
   return builder;
 }
 
-function generateCenterIslands(builder: MapBuilder): void {
-  const { large, medium } = builder.config.obstacles;
-  const variants = [
-    {
-      large: [[5, 4], [9, 4], [5, 7], [9, 7]],
-      medium: [[7, 3], [7, 8]],
-    },
-    {
-      large: [[6, 3], [8, 5], [6, 7], [10, 7]],
-      medium: [[4, 6], [10, 4]],
-    },
-    {
-      large: [[4, 4], [10, 4], [6, 7], [9, 7]],
-      medium: [[7, 5], [7, 8]],
-    },
-  ];
-  const variant = variants[Math.floor(Math.random() * variants.length)];
+function transformPlacement(
+  placement: TerrainPlacement,
+  config: ThemeConfig,
+  mirrorX: boolean,
+  mirrorY: boolean
+): TerrainPlacement {
+  const template = config.obstacles[placement.kind];
+  const rotation = placement.rotation ?? 0;
+  const { gridW, gridH } = getRotatedSize(template, rotation);
+  return {
+    ...placement,
+    col: mirrorX ? COLS - placement.col - gridW : placement.col,
+    row: mirrorY ? ROWS - placement.row - gridH : placement.row,
+  };
+}
 
-  for (const [col, row] of variant.large) {
-    builder.place(large, col, row);
-  }
-  for (const [col, row] of variant.medium) {
-    builder.place(medium, col, row);
+function addSymmetricDetails(
+  builder: MapBuilder,
+  candidates: Array<[number, number]>,
+  mirrorX: boolean,
+  mirrorY: boolean
+): void {
+  const shuffled = shuffle([...candidates]);
+  const count = Math.min(shuffled.length, 3 + Math.floor(Math.random() * 3));
+  for (const [col, row] of shuffled.slice(0, count)) {
+    const transformed = transformPlacement(
+      { kind: "small", col, row, destructible: true },
+      builder.config,
+      mirrorX,
+      mirrorY
+    );
+    builder.place(transformed);
   }
 }
 
-function generateWingCover(builder: MapBuilder): void {
-  const { medium } = builder.config.obstacles;
-  const wingPairs = [
-    [[3, 3], [11, 3]],
-    [[2, 5], [12, 5]],
-    [[3, 8], [11, 8]],
-  ];
-
-  for (const pair of wingPairs) {
-    const shouldUse = Math.random() < 0.82;
-    if (!shouldUse) continue;
-    for (const [col, row] of pair) {
-      builder.place(medium, col, row);
-    }
-  }
-}
-
-function generateOuterCover(builder: MapBuilder): void {
-  const { small, medium } = builder.config.obstacles;
-  const outerGroups = [
-    { medium: [4, 1], small: [[1, 4], [5, 2]] },
-    { medium: [10, 1], small: [[14, 4], [10, 2]] },
-    { medium: [4, 10], small: [[1, 7], [5, 9]] },
-    { medium: [10, 10], small: [[14, 7], [10, 9]] },
-  ] as const;
-
-  for (const group of outerGroups) {
-    if (Math.random() < 0.9) {
-      builder.place(medium, group.medium[0], group.medium[1]);
-    }
-    for (const [col, row] of group.small) {
-      if (Math.random() < 0.65) {
-        builder.place(small, col, row);
-      }
-    }
-  }
-}
-
-function generateRandomDetails(builder: MapBuilder): void {
-  const { small } = builder.config.obstacles;
-  const detailCandidates = shuffle([
-    [4, 3], [6, 2], [9, 2], [11, 4],
-    [1, 5], [5, 5], [10, 6], [14, 6],
-    [4, 8], [6, 9], [9, 9], [11, 8],
-    [7, 1], [8, 10], [2, 7], [13, 4],
-  ]);
-  const count = 5 + Math.floor(Math.random() * 4);
-
-  let placed = 0;
-  for (const [col, row] of detailCandidates) {
-    if (placed >= count) break;
-    if (builder.place(small, col, row)) {
-      placed++;
-    }
-  }
-}
-
-function shuffle<T>(items: T[]): T[] {
-  for (let i = items.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
+function getRotatedSize(template: ObstacleTypeConfig, rotation: Rotation): { gridW: number; gridH: number } {
+  return rotation === 90
+    ? { gridW: template.gridH, gridH: template.gridW }
+    : { gridW: template.gridW, gridH: template.gridH };
 }
 
 function canPlace(
@@ -256,29 +334,18 @@ function canPlace(
   gridW: number,
   gridH: number
 ): boolean {
-  if (col < 0 || row < 0 || col + gridW > COLS || row + gridH > ROWS) {
-    return false;
-  }
-  if (isNearSpawn(col * O, row * O, gridW, gridH)) {
-    return false;
-  }
+  if (col < 0 || row < 0 || col + gridW > COLS || row + gridH > ROWS) return false;
+  if (isNearSpawn(col, row, gridW, gridH)) return false;
+
   for (let dc = 0; dc < gridW; dc++) {
     for (let dr = 0; dr < gridH; dr++) {
-      if (occupied.has(`${col + dc},${row + dr}`)) {
-        return false;
-      }
+      if (occupied.has(`${col + dc},${row + dr}`)) return false;
     }
   }
   return true;
 }
 
-function markOccupied(
-  occupied: Set<string>,
-  col: number,
-  row: number,
-  gridW: number,
-  gridH: number
-): void {
+function markOccupied(occupied: Set<string>, col: number, row: number, gridW: number, gridH: number): void {
   for (let dc = 0; dc < gridW; dc++) {
     for (let dr = 0; dr < gridH; dr++) {
       occupied.add(`${col + dc},${row + dr}`);
@@ -288,92 +355,139 @@ function markOccupied(
 
 function createObstacle(
   template: ObstacleTypeConfig,
-  x: number,
-  y: number,
+  col: number,
+  row: number,
+  gridW: number,
+  gridH: number,
+  rotation: Rotation,
+  destructibleOverride: boolean | undefined,
   id: number
 ): ObstacleSnapshot {
+  const destructible = destructibleOverride ?? template.destructible;
   return {
     obstacleId: `obs_${id}`,
-    x,
-    y,
-    width: template.gridW * O,
-    height: template.gridH * O,
+    x: col * O,
+    y: row * O,
+    width: gridW * O,
+    height: gridH * O,
+    rotation,
     type: template.name,
-    destructible: template.destructible,
-    hp: template.destructible ? template.maxHp : undefined,
-    maxHp: template.destructible ? template.maxHp : undefined,
+    destructible,
+    hp: destructible ? template.maxHp : undefined,
+    maxHp: destructible ? template.maxHp : undefined,
   };
 }
 
-// 检查是否靠近出生点；按障碍物中心点计算，保证初始移动空间。
-function isNearSpawn(x: number, y: number, gridW = 1, gridH = 1): boolean {
-  for (const spawn of SPAWN_POINTS) {
-    const dx = x + (gridW * O) / 2 - spawn.x;
-    const dy = y + (gridH * O) / 2 - spawn.y;
-    if (dx * dx + dy * dy < SPAWN_SAFE_RADIUS * SPAWN_SAFE_RADIUS) {
-      return true;
-    }
-  }
-  return false;
+function isNearSpawn(col: number, row: number, gridW: number, gridH: number): boolean {
+  const centerX = (col + gridW / 2) * O;
+  const centerY = (row + gridH / 2) * O;
+  return SPAWN_POINTS.some((spawn) => {
+    const dx = centerX - spawn.x;
+    const dy = centerY - spawn.y;
+    return dx * dx + dy * dy < SPAWN_SAFE_RADIUS * SPAWN_SAFE_RADIUS;
+  });
 }
 
-// BFS 连通性检查：所有出生点之间必须互相可达
+export function validateGeneratedMap(obstacles: ObstacleSnapshot[]): MapValidationResult {
+  const issues: string[] = [];
+  const occupied = new Set<string>();
+
+  for (const obstacle of obstacles) {
+    const col = Math.floor(obstacle.x / O);
+    const row = Math.floor(obstacle.y / O);
+    const gridW = Math.ceil(obstacle.width / O);
+    const gridH = Math.ceil(obstacle.height / O);
+
+    if (col < 0 || row < 0 || col + gridW > COLS || row + gridH > ROWS) {
+      issues.push(`障碍物 ${obstacle.obstacleId} 越界`);
+      continue;
+    }
+    for (let dc = 0; dc < gridW; dc++) {
+      for (let dr = 0; dr < gridH; dr++) {
+        const key = `${col + dc},${row + dr}`;
+        if (occupied.has(key)) issues.push(`网格 ${key} 存在障碍物重叠`);
+        occupied.add(key);
+      }
+    }
+  }
+
+  if (!checkConnectivity(obstacles)) issues.push("出生点之间不存在基础连通路线");
+  if (!hasTwoSpawnExits(obstacles)) issues.push("至少一个出生点不足两个独立离场方向");
+  if (obstacles.length < 12) issues.push("地形结构障碍物数量不足");
+
+  return {
+    valid: issues.length === 0,
+    issues,
+    obstacleCount: obstacles.length,
+    destructibleCount: obstacles.filter((obstacle) => obstacle.destructible).length,
+  };
+}
+
+function buildBlockedGrid(obstacles: ObstacleSnapshot[]): boolean[][] {
+  const grid = Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => false));
+  for (const obstacle of obstacles) {
+    const startCol = Math.floor(obstacle.x / O);
+    const startRow = Math.floor(obstacle.y / O);
+    const gridW = Math.ceil(obstacle.width / O);
+    const gridH = Math.ceil(obstacle.height / O);
+    for (let dc = 0; dc < gridW; dc++) {
+      for (let dr = 0; dr < gridH; dr++) {
+        const col = startCol + dc;
+        const row = startRow + dr;
+        if (col >= 0 && col < COLS && row >= 0 && row < ROWS) grid[row][col] = true;
+      }
+    }
+  }
+  return grid;
+}
+
+function hasTwoSpawnExits(obstacles: ObstacleSnapshot[]): boolean {
+  const blocked = buildBlockedGrid(obstacles);
+  const directions: Array<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  return SPAWN_POINTS.every((spawn) => {
+    const col = Math.floor(spawn.x / O);
+    const row = Math.floor(spawn.y / O);
+    const openDirections = directions.filter(([dc, dr]) => {
+      const nextCol = col + dc;
+      const nextRow = row + dr;
+      return nextCol >= 0 && nextCol < COLS && nextRow >= 0 && nextRow < ROWS && !blocked[nextRow][nextCol];
+    });
+    return openDirections.length >= 2;
+  });
+}
+
 function checkConnectivity(obstacles: ObstacleSnapshot[]): boolean {
-  const grid: boolean[][] = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => false)
-  );
-
-  for (const obs of obstacles) {
-    const startC = Math.floor(obs.x / O);
-    const startR = Math.floor(obs.y / O);
-    const w = Math.ceil(obs.width / O);
-    const h = Math.ceil(obs.height / O);
-    for (let dc = 0; dc < w; dc++) {
-      for (let dr = 0; dr < h; dr++) {
-        const c = startC + dc;
-        const r = startR + dr;
-        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-          grid[r][c] = true;
-        }
-      }
-    }
-  }
-
-  const spawnCells = SPAWN_POINTS.map((s) => ({
-    c: Math.floor(s.x / O),
-    r: Math.floor(s.y / O),
+  const blocked = buildBlockedGrid(obstacles);
+  const spawnCells = SPAWN_POINTS.map((spawn) => ({
+    col: Math.floor(spawn.x / O),
+    row: Math.floor(spawn.y / O),
   }));
+  const visited = Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => false));
+  const queue: Array<[number, number]> = [[spawnCells[0].col, spawnCells[0].row]];
+  visited[spawnCells[0].row][spawnCells[0].col] = true;
 
-  const visited: boolean[][] = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => false)
-  );
-
-  const start = spawnCells[0];
-  const queue: Array<[number, number]> = [[start.c, start.r]];
-  visited[start.r][start.c] = true;
-
-  while (queue.length > 0) {
-    const [c, r] = queue.shift()!;
-    const neighbors: Array<[number, number]> = [
-      [c - 1, r],
-      [c + 1, r],
-      [c, r - 1],
-      [c, r + 1],
-    ];
-    for (const [nc, nr] of neighbors) {
+  for (let index = 0; index < queue.length; index++) {
+    const [col, row] = queue[index];
+    for (const [dc, dr] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>) {
+      const nextCol = col + dc;
+      const nextRow = row + dr;
       if (
-        nc >= 0 &&
-        nc < COLS &&
-        nr >= 0 &&
-        nr < ROWS &&
-        !visited[nr][nc] &&
-        !grid[nr][nc]
+        nextCol >= 0 && nextCol < COLS && nextRow >= 0 && nextRow < ROWS &&
+        !visited[nextRow][nextCol] && !blocked[nextRow][nextCol]
       ) {
-        visited[nr][nc] = true;
-        queue.push([nc, nr]);
+        visited[nextRow][nextCol] = true;
+        queue.push([nextCol, nextRow]);
       }
     }
   }
 
-  return spawnCells.every((s) => visited[s.r][s.c]);
+  return spawnCells.every(({ col, row }) => visited[row][col]);
+}
+
+function shuffle<T>(items: T[]): T[] {
+  for (let index = items.length - 1; index > 0; index--) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [items[index], items[target]] = [items[target], items[index]];
+  }
+  return items;
 }

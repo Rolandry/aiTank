@@ -36,6 +36,31 @@ aiTank/
 
 ---
 
+## 快捷启动
+
+在 `aiTank` 目录执行：
+
+```bash
+chmod +x start.sh  # 仅首次需要
+./start.sh
+```
+
+脚本会自动完成以下操作：
+
+- 检查 Node.js、npm 和端口占用
+- 首次运行时安装客户端、服务端依赖
+- 同时启动 WebSocket 服务端和 Vite 客户端
+- 浏览器打开 `http://localhost:3000`
+- 按 `Ctrl+C` 同时停止两个服务
+
+可通过环境变量禁止自动打开浏览器：
+
+```bash
+OPEN_BROWSER=0 ./start.sh
+```
+
+---
+
 ## 局域网联机指南
 
 ### 主机（你）需要做什么

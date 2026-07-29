@@ -113,7 +113,15 @@ export class GameRenderer {
       const img = getAsset(assetKey);
 
       if (img) {
-        this.ctx.drawImage(img, obs.x, obs.y, obs.width, obs.height);
+        if (obs.rotation === 90) {
+          this.ctx.save();
+          this.ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+          this.ctx.rotate(Math.PI / 2);
+          this.ctx.drawImage(img, -obs.height / 2, -obs.width / 2, obs.height, obs.width);
+          this.ctx.restore();
+        } else {
+          this.ctx.drawImage(img, obs.x, obs.y, obs.width, obs.height);
+        }
       } else {
         // 降级：不同类型用不同颜色
         this.ctx.fillStyle = OBSTACLE_COLORS[type] || FALLBACK_COLORS.wall;
