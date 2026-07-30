@@ -259,16 +259,10 @@ export class GameRenderer {
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       }
 
-      // 可破坏障碍物显示血条
+      // 可破坏障碍物显示血条；可破坏性已由素材规格表达（1×1 可破坏），
+      // 因此不再叠加白色边框标记。
       if (obs.destructible && obs.hp !== undefined && obs.maxHp !== undefined) {
         this.renderObstacleHp(obs.x, obs.y, obs.width, obs.hp, obs.maxHp);
-      }
-
-      // 可破坏障碍物添加视觉标记（白色边框）
-      if (obs.destructible) {
-        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
       }
     }
   }

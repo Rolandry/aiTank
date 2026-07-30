@@ -61,6 +61,7 @@ interface ObstaclePlacement {
   gridH: number;
   rotation: Rotation;
   destructible: boolean;
+  hpMultiplier?: number; // 孤立墙格比门洞更耐打，避免地形过易拆解
 }
 
 const THEMES: Record<MapTheme, ThemeConfig> = {
@@ -546,11 +547,13 @@ function transformGrid(source: SemanticGrid, mirrorX: boolean, mirrorY: boolean)
   return result;
 }
 
+// 可破坏性与素材一一对应：1×1 恒可破坏，2×1 与 2×2 恒不可破坏。
+// 玩家因此可以仅凭外观判断能否击毁，不依赖额外标记。
 function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnapshot[] {
   const placements: ObstaclePlacement[] = [];
   const used = Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => false));
 
-  // 可破坏格必须保持单格，作为墙体门洞和捷径。
+  // 门洞：单格可破坏，作为捷径入口。
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
       if (grid[row][col] === "door") {
@@ -560,7 +563,7 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
     }
   }
 
-  // 优先打包 2×2 墙块，再打包连续墙段；剩余转为不可破坏单格。
+  // 结构墙体：优先打包 2×2，再打包横向与纵向 2×1。
   for (let row = 0; row < ROWS - 1; row++) {
     for (let col = 0; col < COLS - 1; col++) {
       if (canPack(grid, used, col, row, 2, 2)) {
@@ -585,10 +588,18 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
       }
     }
   }
+
+  // 剩余孤立墙格无法并入结构墙体，统一转为可破坏门，
+  // 避免出现「外观相同但不可破坏」的 1×1 障碍；
+  // 但血量翻倍，使其明显比蓝图门洞更难拆除。
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
       if (grid[row][col] === "wall" && !used[row][col]) {
-        placements.push({ kind: "small", col, row, gridW: 1, gridH: 1, rotation: 0, destructible: false });
+        placements.push({
+          kind: "small", col, row, gridW: 1, gridH: 1,
+          rotation: 0, destructible: true, hpMultiplier: 2,
+        });
+        used[row][col] = true;
       }
     }
   }
@@ -624,6 +635,7 @@ function createObstacle(
   index: number
 ): ObstacleSnapshot {
   const template = config.obstacles[placement.kind];
+  const maxHp = template.maxHp * (placement.hpMultiplier ?? 1);
   return {
     obstacleId: `obs_${index}`,
     x: placement.col * O,
@@ -633,8 +645,8 @@ function createObstacle(
     rotation: placement.rotation,
     type: template.name,
     destructible: placement.destructible,
-    hp: placement.destructible ? template.maxHp : undefined,
-    maxHp: placement.destructible ? template.maxHp : undefined,
+    hp: placement.destructible ? maxHp : undefined,
+    maxHp: placement.destructible ? maxHp : undefined,
   };
 }
 

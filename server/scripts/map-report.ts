@@ -17,6 +17,9 @@ for (const theme of THEMES) {
   let doorMin = Infinity;
   let doorMax = 0;
   const variants = new Set<string>();
+  // 素材一致性：同一 type 不得同时存在可破坏与不可破坏实例
+  const typeBehavior = new Map<string, Set<boolean>>();
+  let sizeMismatch = 0;
 
   for (let index = 0; index < SAMPLES; index++) {
     const map = generateMap(theme);
@@ -38,7 +41,18 @@ for (const theme of THEMES) {
     doorMin = Math.min(doorMin, result.destructibleCount);
     doorMax = Math.max(doorMax, result.destructibleCount);
     variants.add(mapToAscii(map.obstacles));
+
+    for (const obstacle of map.obstacles) {
+      if (!typeBehavior.has(obstacle.type)) typeBehavior.set(obstacle.type, new Set());
+      typeBehavior.get(obstacle.type)!.add(obstacle.destructible);
+
+      // 1×1 必须可破坏；更大规格必须不可破坏
+      const isSingleCell = obstacle.width === 64 && obstacle.height === 64;
+      if (isSingleCell !== obstacle.destructible) sizeMismatch++;
+    }
   }
+
+  const inconsistent = [...typeBehavior.entries()].filter(([, set]) => set.size > 1);
 
   lines.push(
     `${theme}: blocked=${(blockedMin * 100).toFixed(1)}%-${(blockedMax * 100).toFixed(1)}% ` +
@@ -48,6 +62,19 @@ for (const theme of THEMES) {
   for (const [issue, count] of issueCounter) {
     lines.push(`  ISSUE x${count}: ${issue}`);
   }
+  if (inconsistent.length > 0) {
+    failed++;
+    for (const [type] of inconsistent) {
+      lines.push(`  ISSUE: 类型 ${type} 同时存在可破坏与不可破坏实例`);
+    }
+  }
+  if (sizeMismatch > 0) {
+    failed++;
+    lines.push(`  ISSUE: ${sizeMismatch} 个障碍的可破坏性与规格不匹配`);
+  }
+  lines.push(
+    `  素材一致性: 类型数=${typeBehavior.size} 冲突=${inconsistent.length} 规格不匹配=${sizeMismatch}`
+  );
   lines.push(mapToAscii(generateMap(theme).obstacles));
 }
 
