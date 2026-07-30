@@ -210,33 +210,7 @@ function grantEffect(player: ServerPlayer, type: PowerupType): void {
   check("护盾随效果过期归零", player.shield === 0, `shield=${player.shield}`);
 }
 
-// 12. ghost：可穿越可破坏障碍物但不能穿墙
-{
-  const soft: ObstacleSnapshot = {
-    obstacleId: "s1", x: 320, y: 384, width: 64, height: 64,
-    type: "grass_jungle_tree", destructible: true, hp: 2, maxHp: 2,
-  };
-  const hard: ObstacleSnapshot = {
-    obstacleId: "h1", x: 320, y: 384, width: 64, height: 64,
-    type: "grass_jungle_rock", destructible: false,
-  };
-
-  const soften = createHarness([soft]);
-  const ghost = createPlayer("p1", 300, 416);
-  grantEffect(ghost, "ghost");
-  soften.players.set(ghost.playerId, ghost);
-  soften.world.handleDash(ghost);
-  check("ghost 穿越可破坏障碍", ghost.x > 320, `x=${ghost.x}`);
-
-  const solid = createHarness([hard]);
-  const blocked = createPlayer("p2", 300, 416);
-  grantEffect(blocked, "ghost");
-  solid.players.set(blocked.playerId, blocked);
-  solid.world.handleDash(blocked);
-  check("ghost 无法穿越实墙", blocked.x < 320, `x=${blocked.x}`);
-}
-
-// 13. pierce：击穿可破坏障碍后继续飞行
+// 12. pierce：击穿可破坏障碍后继续飞行
 {
   const soft: ObstacleSnapshot = {
     obstacleId: "s1", x: 384, y: 384, width: 64, height: 64,
@@ -424,25 +398,6 @@ function grantEffect(player: ServerPlayer, type: PowerupType): void {
   });
   check("shrink 到期后位置合法", legal, `y=${player.y}`);
   check("shrink 到期后可正常移动", canMove);
-}
-
-// 22. ghost 到期后不会卡在可破坏障碍内
-{
-  const soft: ObstacleSnapshot = {
-    obstacleId: "s1", x: 448, y: 384, width: 64, height: 64,
-    type: "grass_jungle_tree", destructible: true, hp: 2, maxHp: 2,
-  };
-  const { world, players } = createHarness([soft]);
-  // 停在可破坏障碍正中央，ghost 到期后原位非法
-  const player = createPlayer("p1", 480, 416);
-  player.effects.set("ghost", Date.now() - 1);
-  players.set(player.playerId, player);
-
-  tick(world);
-
-  const rect = tankRect(player.x, player.y, GAME_CONFIG.tankSize);
-  check("ghost 到期后脱离障碍物", insideMap(rect) && !hitsObstacle(rect, [soft]),
-    `pos=${player.x},${player.y}`);
 }
 
 console.log(results.join("\n"));

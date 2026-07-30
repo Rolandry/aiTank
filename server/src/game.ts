@@ -349,8 +349,8 @@ export class GameWorld {
         if (expiry > now) continue;
         player.effects.delete(type);
         if (type === "shield") player.shield = 0;
-        // shrink/ghost 到期后碰撞体积或穿越权限变化，可能导致当前位置非法
-        if (type === "shrink" || type === "ghost") sizeRestored = true;
+        // shrink 到期后碰撞体积恢复，可能导致当前位置非法
+        if (type === "shrink") sizeRestored = true;
       }
       if (sizeRestored) this.resolveStuck(player);
     }
