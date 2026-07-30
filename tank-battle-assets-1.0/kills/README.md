@@ -104,4 +104,4 @@ rsvg-convert -w 20 -h 20 kill_marker_red.svg -o kill_marker_red.png
 ## 📖 相关文档
 
 - `../asset-map.md` - 完整资产映射表
-- `../坦克大战美术skill.md` - 美术规范总览
+- `../../.codeflicker/skills/pixel-topdown-game-assets/` - 美术素材生成 skill（含规范总览）
