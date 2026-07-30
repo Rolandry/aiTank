@@ -1,7 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { randomUUID } from "node:crypto";
 import { RoomManager } from "./room";
-import type { ClientMessage, ServerMessage } from "./protocol";
+import type { ClientMessage, ServerMessage, MapThemeChoice } from "./protocol";
+import { MAP_THEME_CHOICES } from "./protocol";
 import type { ClientContext } from "./types";
 
 const PORT = 8080;
@@ -48,7 +49,8 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     if (ctx.roomId) {
-      manager.getRoom(ctx.roomId)?.removePlayer(ctx.playerId);
+      // 异常断线：对局中保留席位与凭证，允许本局结束前重连
+      manager.getRoom(ctx.roomId)?.removePlayer(ctx.playerId, false);
     }
     contexts.delete(ws);
     console.log(`[ws] 连接关闭: ${ctx.playerId}`);
@@ -85,13 +87,25 @@ function handleMessage(
         });
         return;
       }
-      const room = manager.createRoom(ws, ctx.playerId, msg.nickname);
+      const mode = msg.mode === "classic" ? "classic" : "deathmatch";
+      // 非法主题值回退为随机，避免客户端传错导致开局失败
+      const themeChoice = MAP_THEME_CHOICES.includes(msg.mapTheme as never)
+        ? (msg.mapTheme as MapThemeChoice)
+        : "random";
+      const room = manager.createRoom(
+        ws,
+        ctx.playerId,
+        msg.nickname,
+        mode,
+        themeChoice
+      );
       ctx.roomId = room.roomId;
       send(ws, {
         type: "room_created",
         roomId: room.roomId,
         playerId: ctx.playerId,
         isHost: true,
+        sessionToken: room.players.get(ctx.playerId)?.sessionToken ?? "",
       });
       // 先发 room_created 再广播大厅状态，保证创建者不丢 lobby_update
       room.broadcastLobby();
@@ -119,10 +133,53 @@ function handleMessage(
 
     case "leave_room": {
       if (ctx.roomId) {
-        manager.getRoom(ctx.roomId)?.removePlayer(ctx.playerId);
+        // 主动退出：作废凭证，不保留席位
+        manager.getRoom(ctx.roomId)?.removePlayer(ctx.playerId, true);
         ctx.roomId = null;
         ctx.isSpectator = false;
       }
+      return;
+    }
+
+    case "rejoin_room": {
+      const roomId = typeof msg.roomId === "string" ? msg.roomId.toUpperCase() : "";
+      const token = typeof msg.sessionToken === "string" ? msg.sessionToken : "";
+      const room = roomId && token ? manager.getRoom(roomId) : undefined;
+      const player = room?.rejoinPlayer(ws, token) ?? null;
+
+      if (!room || !player) {
+        send(ws, {
+          type: "room_error",
+          code: "REJOIN_FAILED",
+          message: "重连失败，房间或会话已失效",
+        });
+        return;
+      }
+
+      // 沙用原 playerId，舍弃本次连接新生成的临时 ID
+      ctx.playerId = player.playerId;
+      ctx.roomId = room.roomId;
+      // 无尽死斗：始终以参战身份恢复，死亡会自动复活。
+      // 经典模式：一条命，已死亡者只能观战。
+      const asSpectator = room.mode === "classic" && !player.alive;
+      ctx.isSpectator = asSpectator;
+
+      send(ws, {
+        type: "rejoin_success",
+        roomId: room.roomId,
+        playerId: player.playerId,
+        isHost: player.playerId === room.hostId,
+        isSpectator: asSpectator,
+        players: room.getPlayerList(),
+        gameStatus: room.status,
+      });
+      room.broadcast({
+        type: "player_reconnected",
+        playerId: player.playerId,
+        nickname: player.nickname,
+      });
+      if (room.game) send(ws, room.game.buildSnapshot());
+      else room.broadcastLobby();
       return;
     }
 

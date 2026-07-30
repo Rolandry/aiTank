@@ -1,4 +1,5 @@
 import type { ClientMessage, ServerMessage } from "../types/protocol";
+import { loadSession } from "./session";
 
 export enum ConnectionState {
   IDLE = "idle",
@@ -59,10 +60,14 @@ export class GameSocket {
 
       this.ws.onopen = () => {
         this.setState(ConnectionState.CONNECTED);
+        const isReconnect = this.reconnectAttempts > 0;
         this.reconnectAttempts = 0;
         this.lastPingTime = Date.now();
         this.ws!.send(JSON.stringify({ type: "ping", timestamp: this.lastPingTime }));
         this.startHeartbeat();
+        // 重连成功后先请求恢复身份，再发送积压消息，
+        // 否则积压的对局指令会因服务端尚未绑定房间而被丢弃。
+        if (isReconnect) this.tryRejoin();
         this.flushPending();
         resolve();
       };
@@ -172,6 +177,20 @@ export class GameSocket {
     this.reconnectTimer = setTimeout(() => {
       this.connect().catch(() => {});
     }, this.reconnectInterval);
+  }
+
+  // 重连成功后凭本地凭证请求恢复原玩家身份。
+  // 失败由服务端返回 REJOIN_FAILED，页面层负责清理凭证并回退首页。
+  private tryRejoin(): void {
+    const session = loadSession();
+    if (!session || this.ws?.readyState !== WebSocket.OPEN) return;
+    this.ws.send(
+      JSON.stringify({
+        type: "rejoin_room",
+        roomId: session.roomId,
+        sessionToken: session.sessionToken,
+      })
+    );
   }
 
   private stopReconnect(): void {

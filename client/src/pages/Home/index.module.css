@@ -46,6 +46,100 @@
   text-align: center;
 }
 
+/* 模式选择 */
+.modeGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.modeOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 2px solid #3a3a52;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b8b8c8;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.modeOption:hover {
+  border-color: #5a5a7a;
+}
+
+.modeActive {
+  border-color: #4a9eff;
+  background: rgba(74, 158, 255, 0.14);
+  color: #fff;
+}
+
+.modeName {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.modeDesc {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* 地图主题选择 */
+.themeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.themeChip {
+  flex: 1 1 auto;
+  min-width: 88px;
+  padding: 7px 10px;
+  border: 2px solid #3a3a52;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b8b8c8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.themeChip:hover {
+  border-color: #5a5a7a;
+}
+
+.themeActive {
+  border-color: #4a9eff;
+  background: rgba(74, 158, 255, 0.14);
+  color: #fff;
+}
+
+/* 房间卡片中的模式标签 */
+.roomMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roomMode {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(74, 158, 255, 0.18);
+  color: #9ccdff;
+  font-size: 12px;
+}
+
+.roomTheme {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(120, 200, 140, 0.16);
+  color: #9fdcb4;
+  font-size: 12px;
+}
+
 .createButton {
   width: 100%;
   padding: 12px 24px;

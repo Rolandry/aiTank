@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { gameSocket, ConnectionState } from "../../network/socket";
+import { clearSession } from "../../network/session";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
-import type { PlayerInfo } from "../../types/protocol";
+import type {
+  PlayerInfo,
+  GameMode,
+  MapThemeChoice,
+} from "../../types/protocol";
+import { MAP_THEME_LABEL } from "../../types/protocol";
 import styles from "./index.module.css";
 
 export default function Lobby() {
@@ -14,6 +20,8 @@ export default function Lobby() {
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [hostId, setHostId] = useState("");
   const [canStart, setCanStart] = useState(false);
+  const [mode, setMode] = useState<GameMode>("deathmatch");
+  const [mapTheme, setMapTheme] = useState<MapThemeChoice>("random");
   const [connectionState, setConnectionState] = useState(
     gameSocket.getState()
   );
@@ -22,6 +30,8 @@ export default function Lobby() {
     setPlayers(msg.players);
     setHostId(msg.hostId);
     setCanStart(msg.canStart);
+    setMode(msg.mode);
+    setMapTheme(msg.mapTheme);
   });
 
   useSocketMessage("countdown", () => {
@@ -39,6 +49,8 @@ export default function Lobby() {
   };
 
   const handleLeave = () => {
+    // 主动退出必须清理凭证，否则会被误判为断线重连
+    clearSession();
     gameSocket.send({ type: "leave_room" });
     gameSocket.disconnect();
     navigate("/");
@@ -58,6 +70,12 @@ export default function Lobby() {
       <h2 className={styles.heading}>等待大厅</h2>
       <div className={styles.roomInfo}>
         <span>房间号: {roomId}</span>
+        <span>
+          模式: {mode === "classic" ? "经典（一条命）" : "无尽死斗"}
+        </span>
+        <span>
+          地图: {mapTheme === "random" ? "随机" : MAP_THEME_LABEL[mapTheme]}
+        </span>
         <span>
           人数: {players.length}/4
         </span>

@@ -34,7 +34,7 @@ const POWERUP_WEIGHT: Record<PowerupType, number> = {
   heal: 2,
   rapid: 3, bigshot: 3, spread: 2, pierce: 2, ricochet: 2, power_shot: 2,
 };
-const RESPAWN_DELAY_MS = 3000; // 击杀赛模式：被淘汰后 3 秒复活
+export const RESPAWN_DELAY_MS = 3000; // 击杀赛模式：被淘汰后 3 秒复活
 
 export class GameWorld {
   private bullets = new Map<string, ServerBullet>();
@@ -424,6 +424,7 @@ export class GameWorld {
 
   private moveTanks(dt: number): void {
     for (const p of this.room.players.values()) {
+      // 断线玩家坦克留在场上但静止，仍可被命中
       if (!p.alive || !p.connected) continue;
       const dir = this.resolveDirection(p.input);
       if (!dir) continue;
@@ -605,8 +606,10 @@ export class GameWorld {
     if (target.hp <= 0 && target.alive) {
       target.alive = false;
       if (owner) owner.kills++;
-      // 击杀赛模式：3 秒后在随机出生点复活（断线玩家由 connected=false 跳过）
-      target.respawnAt = Date.now() + RESPAWN_DELAY_MS;
+      // 无尽死斗：3 秒后复活（断线玩家同样复活，重连后可继续）
+      // 经典模式：一条命，死亡即永久淘汰
+      target.respawnAt =
+        this.room.mode === "deathmatch" ? Date.now() + RESPAWN_DELAY_MS : null;
       this.room.broadcast({
         type: "player_eliminated",
         playerId: target.playerId,
@@ -619,10 +622,13 @@ export class GameWorld {
     }
   }
 
-  // 到期的死亡玩家在随机出生点复活（优先不被存活坦克占用的点）
+  // 到期的死亡玩家在随机出生点复活（优先不被存活坦克占用的点）。
+  // 仅无尽死斗模式复活；经典模式一条命，死亡即永久淘汰。
+  // 断线玩家同样复活：席位保留至本局结束，重连后可直接继续对局。
   private processRespawns(now: number): void {
+    if (this.room.mode !== "deathmatch") return;
     for (const p of this.room.players.values()) {
-      if (p.alive || !p.connected || p.respawnAt === null) continue;
+      if (p.alive || p.respawnAt === null) continue;
       if (now < p.respawnAt) continue;
       const spawn = this.pickRespawnPoint();
       p.x = spawn.x;
@@ -653,7 +659,9 @@ export class GameWorld {
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // 击杀赛模式：唯一结束条件是时间耗尽，结算击杀排行榜
+  // 结束条件按模式区分：
+  // deathmatch 只在时间耗尽时结算击杀排行；
+  // classic 在存活不足 2 人时立即结束，超时则按存活优先排序。
   private checkGameEnd(now: number): void {
     const players = [...this.room.players.values()];
 
@@ -663,26 +671,65 @@ export class GameWorld {
       return;
     }
 
+    if (this.room.mode === "classic") {
+      const alive = players.filter((p) => p.alive);
+      if (alive.length <= 1) {
+        const leaderboard = this.buildLeaderboard(players);
+        const winner = alive[0] ?? null;
+        this.room.endGame(
+          winner?.playerId ?? null,
+          winner?.nickname ?? null,
+          winner === null, // 同归于尽记平局
+          "last_alive",
+          leaderboard
+        );
+        return;
+      }
+    }
+
     if (this.remainingMs(now) > 0) return;
 
-    const leaderboard = [...players]
-      .sort((a, b) => b.kills - a.kills || b.hitCount - a.hitCount)
-      .map((p) => ({
-        playerId: p.playerId,
-        nickname: p.nickname,
-        color: p.color,
-        kills: p.kills,
-        hitCount: p.hitCount,
-      }));
+    const leaderboard = this.buildLeaderboard(players);
     const top = leaderboard[0];
-    const tied = leaderboard.filter(
-      (e) => e.kills === top.kills && e.hitCount === top.hitCount
-    );
+    // 经典模式超时：存活优先，其次击杀数、命中数
+    const tied =
+      this.room.mode === "classic"
+        ? leaderboard.filter(
+            (e) =>
+              e.alive === top.alive &&
+              e.kills === top.kills &&
+              e.hitCount === top.hitCount
+          )
+        : leaderboard.filter(
+            (e) => e.kills === top.kills && e.hitCount === top.hitCount
+          );
+
     if (tied.length === 1) {
       this.room.endGame(top.playerId, top.nickname, false, "timeout", leaderboard);
     } else {
       this.room.endGame(null, null, true, "timeout", leaderboard);
     }
+  }
+
+  // 经典模式下存活者排在已淘汰者之前
+  private buildLeaderboard(players: ServerPlayer[]) {
+    const byMode =
+      this.room.mode === "classic"
+        ? (a: ServerPlayer, b: ServerPlayer) =>
+            Number(b.alive) - Number(a.alive) ||
+            b.kills - a.kills ||
+            b.hitCount - a.hitCount
+        : (a: ServerPlayer, b: ServerPlayer) =>
+            b.kills - a.kills || b.hitCount - a.hitCount;
+
+    return [...players].sort(byMode).map((p) => ({
+      playerId: p.playerId,
+      nickname: p.nickname,
+      color: p.color,
+      kills: p.kills,
+      hitCount: p.hitCount,
+      alive: p.alive,
+    }));
   }
 
   private remainingMs(now: number): number {
@@ -738,6 +785,7 @@ export class GameWorld {
       winnerId: this.room.winnerId,
       isDraw: this.room.isDraw,
       mapTheme: this.room.mapTheme,
+      mode: this.room.mode,
     };
   }
 }

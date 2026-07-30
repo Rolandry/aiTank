@@ -1,6 +1,9 @@
 import { WebSocket } from "ws";
+import { randomUUID } from "node:crypto";
 import { GAME_CONFIG, PLAYER_COLORS } from "./protocol";
 import type {
+  GameMode,
+  MapThemeChoice,
   LeaderboardEntry,
   LobbyUpdate,
   ObstacleSnapshot,
@@ -9,7 +12,7 @@ import type {
   ServerMessage,
 } from "./protocol";
 import { generateMap, type MapTheme } from "./map";
-import { GameWorld } from "./game";
+import { GameWorld, RESPAWN_DELAY_MS } from "./game";
 import type { RoomStatus, ServerPlayer } from "./types";
 
 function send(ws: WebSocket, msg: ServerMessage): void {
@@ -30,7 +33,9 @@ export class Room {
 
   constructor(
     public readonly roomId: string,
-    private onEmpty: () => void
+    private onEmpty: () => void,
+    public readonly mode: GameMode = "deathmatch",
+    public readonly themeChoice: MapThemeChoice = "random"
   ) {}
 
   addPlayer(
@@ -56,6 +61,8 @@ export class Room {
       input: { up: false, down: false, left: false, right: false },
       lastInputSeq: 0,
       connected: true,
+      sessionToken: randomUUID(),
+      disconnectedAt: null,
       effects: new Map(),
       shield: 0,
       lastDashTime: 0,
@@ -78,8 +85,39 @@ export class Room {
     return this.spectators.has(playerId);
   }
 
-  // 主动离开与断线共用，必须幂等
-  removePlayer(playerId: string): void {
+  // 断线重连：校验凭证后把旧 socket 替换为新连接，沿用原 playerId 与战绩。
+  // 席位保留至本局结束，重连后玩家直接恢复控制继续对局。
+  rejoinPlayer(socket: WebSocket, sessionToken: string): ServerPlayer | null {
+    const player = [...this.players.values()].find(
+      (p) => p.sessionToken === sessionToken
+    );
+    if (!player) return null;
+
+    player.socket = socket;
+    player.connected = true;
+    player.disconnectedAt = null;
+    // 重连后不继承旧输入，避免断线前的按键持续生效
+    player.input = { up: false, down: false, left: false, right: false };
+    player.lastInputSeq = 0;
+
+    // 兜底：无尽死斗下若死亡但没有复活计划（例如旧逻辑遗留），补上复活时间，
+    // 否则玩家会永久卡在死亡状态无法继续对局。
+    // 经典模式一条命，死亡即淘汰，不做补偿。
+    if (
+      this.status === "playing" &&
+      this.mode === "deathmatch" &&
+      !player.alive &&
+      player.respawnAt === null
+    ) {
+      player.respawnAt = Date.now() + RESPAWN_DELAY_MS;
+    }
+    return player;
+  }
+
+  // 主动离开与断线共用，必须幂等。
+  // intentional=true 表示玩家主动退出，不保留席位；
+  // intentional=false 表示异常断线，对局中保留席位直到本局结束以支持重连。
+  removePlayer(playerId: string, intentional = true): void {
     if (this.spectators.delete(playerId)) {
       this.checkEmpty();
       return;
@@ -99,12 +137,20 @@ export class Room {
       }
       this.broadcastLobby();
     } else {
-      // playing / finished：判定淘汰，保留记录（位置供客户端爆炸特效）
+      // playing / finished：仅标记离线，坦克留在场上但停止响应输入。
+      // 不判定淘汰，玩家重连后可直接恢复控制继续对局。
       player.connected = false;
-      if (this.status === "playing" && player.alive) {
-        player.alive = false;
-        player.respawnAt = null; // 断线玩家不复活
-        this.broadcast({ type: "player_eliminated", playerId, killerId: null });
+      player.disconnectedAt = Date.now();
+      // 断线后不继承旧输入，避免坦克持续移动
+      player.input = { up: false, down: false, left: false, right: false };
+      if (intentional) {
+        // 主动退出：作废凭证并判定淘汰，席位不再保留
+        player.sessionToken = "";
+        if (this.status === "playing" && player.alive) {
+          player.alive = false;
+          player.respawnAt = null;
+          this.broadcast({ type: "player_eliminated", playerId, killerId: null });
+        }
       }
       this.checkEmpty();
     }
@@ -136,7 +182,10 @@ export class Room {
 
   private beginPlay(): void {
     this.status = "playing";
-    const mapData = generateMap(); // 生成随机主题地图
+    // random 时不传参，交给 generateMap 内部的 randomTheme（会避免连续重复同一主题）
+    const mapData = generateMap(
+      this.themeChoice === "random" ? undefined : this.themeChoice
+    );
     this.mapTheme = mapData.theme;
     this.obstacles = mapData.obstacles;
     this.game = new GameWorld(this);
@@ -197,6 +246,9 @@ export class Room {
       canStart:
         this.status === "waiting" &&
         this.players.size >= GAME_CONFIG.minPlayers,
+      mode: this.mode,
+      // 开局后展示实际主题，等待阶段展示房主的选择（可能是 random）
+      mapTheme: this.status === "waiting" ? this.themeChoice : this.mapTheme,
     };
     this.broadcast(msg);
   }
@@ -218,9 +270,20 @@ export class Room {
 export class RoomManager {
   private rooms = new Map<string, Room>();
 
-  createRoom(socket: WebSocket, playerId: string, nickname: string): Room {
+  createRoom(
+    socket: WebSocket,
+    playerId: string,
+    nickname: string,
+    mode: GameMode = "deathmatch",
+    themeChoice: MapThemeChoice = "random"
+  ): Room {
     const roomId = this.generateRoomId();
-    const room = new Room(roomId, () => this.rooms.delete(roomId));
+    const room = new Room(
+      roomId,
+      () => this.rooms.delete(roomId),
+      mode,
+      themeChoice
+    );
     this.rooms.set(roomId, room);
     room.addPlayer(socket, playerId, nickname);
     return room;
@@ -239,6 +302,8 @@ export class RoomManager {
         playerCount: r.players.size,
         maxPlayers: GAME_CONFIG.maxPlayers,
         status: r.status,
+        mode: r.mode,
+        mapTheme: r.status === "waiting" ? r.themeChoice : r.mapTheme,
       }));
   }
 
@@ -279,6 +344,7 @@ export class RoomManager {
         isHost: false,
         players: [],
         gameStatus: "playing",
+        sessionToken: "", // 观战者无席位，不支持重连恢复
       });
       return "spectator";
     }
@@ -301,6 +367,7 @@ export class RoomManager {
       isHost: player.playerId === room.hostId,
       players: room.getPlayerList(),
       gameStatus: "waiting",
+      sessionToken: player.sessionToken,
     });
     // 先发 room_joined 再广播大厅状态，保证新加入者不丢 lobby_update
     room.broadcastLobby();

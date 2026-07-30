@@ -29,6 +29,8 @@ export interface ServerPlayer {
   input: InputState;
   lastInputSeq: number;
   connected: boolean;
+  sessionToken: string; // 断线重连凭证，与连接解耦
+  disconnectedAt: number | null; // 断线时间戳，null 表示在线
   effects: Map<PowerupType, number>; // 效果 → 到期时间戳
   shield: number;
   lastDashTime: number;

@@ -1,8 +1,39 @@
 // ── 客户端 → 服务端 ──
 
+// 地图主题：唯一事实源，服务端 map.ts 从此处导入
+export type MapTheme =
+  | "grass_jungle"
+  | "desert_gobi"
+  | "snow_tundra"
+  | "city_ruins";
+
+// 创建房间时的主题偏好：random 不是主题值，仅表示交由服务端随机挑选
+export type MapThemeChoice = MapTheme | "random";
+
+export const MAP_THEME_LABEL: Record<MapTheme, string> = {
+  grass_jungle: "草木丛林",
+  desert_gobi: "荒漠戈壁",
+  snow_tundra: "雪原冻土",
+  city_ruins: "城市废墟",
+};
+
+// 合法的主题选择项（含随机），用于客户端渲染与服务端校验
+export const MAP_THEME_CHOICES: MapThemeChoice[] = [
+  "random",
+  "grass_jungle",
+  "desert_gobi",
+  "snow_tundra",
+  "city_ruins",
+];
+
+// 游戏模式：deathmatch 无尽死斗（无限复活、按时间结束）；classic 经典（一条命、最后存活者获胜）
+export type GameMode = "deathmatch" | "classic";
+
 export type CreateRoomRequest = {
   type: "create_room";
   nickname: string;
+  mode?: GameMode; // 缺省为 deathmatch，保持旧客户端兼容
+  mapTheme?: MapThemeChoice; // 缺省为 random
 };
 
 export type JoinRoomRequest = {
@@ -13,6 +44,13 @@ export type JoinRoomRequest = {
 
 export type LeaveRoomRequest = {
   type: "leave_room";
+};
+
+// 断线重连：凭 sessionToken 恢复原玩家身份
+export type RejoinRoomRequest = {
+  type: "rejoin_room";
+  roomId: string;
+  sessionToken: string;
 };
 
 export type StartGameRequest = {
@@ -49,6 +87,7 @@ export type ClientMessage =
   | CreateRoomRequest
   | JoinRoomRequest
   | LeaveRoomRequest
+  | RejoinRoomRequest
   | StartGameRequest
   | PlayerInput
   | ShootRequest
@@ -70,6 +109,7 @@ export type RoomCreatedResponse = {
   roomId: string;
   playerId: string;
   isHost: true;
+  sessionToken: string; // 用于断线重连的会话凭证
 };
 
 export type RoomJoinedResponse = {
@@ -79,11 +119,35 @@ export type RoomJoinedResponse = {
   isHost: boolean;
   players: PlayerInfo[];
   gameStatus: "waiting" | "playing";
+  sessionToken: string; // 用于断线重连的会话凭证
+};
+
+// 重连成功：isSpectator 为 true 表示已淘汰，以观战身份恢复
+export type RejoinSuccessResponse = {
+  type: "rejoin_success";
+  roomId: string;
+  playerId: string;
+  isHost: boolean;
+  isSpectator: boolean;
+  players: PlayerInfo[];
+  gameStatus: "waiting" | "countdown" | "playing" | "finished";
+};
+
+// 其他玩家重连通知
+export type PlayerReconnectedEvent = {
+  type: "player_reconnected";
+  playerId: string;
+  nickname: string;
 };
 
 export type RoomErrorResponse = {
   type: "room_error";
-  code: "ROOM_NOT_FOUND" | "ROOM_FULL" | "GAME_ALREADY_STARTED" | "SERVER_ERROR";
+  code:
+    | "ROOM_NOT_FOUND"
+    | "ROOM_FULL"
+    | "GAME_ALREADY_STARTED"
+    | "SERVER_ERROR"
+    | "REJOIN_FAILED";
   message: string;
 };
 
@@ -92,6 +156,8 @@ export type LobbyUpdate = {
   players: PlayerInfo[];
   hostId: string;
   canStart: boolean;
+  mode: GameMode;
+  mapTheme: MapThemeChoice;
 };
 
 export type CountdownEvent = {
@@ -182,7 +248,8 @@ export type WorldSnapshot = {
   powerups: PowerupSnapshot[];
   winnerId: string | null;
   isDraw: boolean;
-  mapTheme?: string; // 地图主题：grass_jungle / desert_gobi / snow_tundra / city_ruins
+  mapTheme?: MapTheme; // 地图主题，开局后必定为具体主题
+  mode: GameMode; // 游戏模式，决定复活与结束规则
 };
 
 export type PlayerHitEvent = {
@@ -213,6 +280,7 @@ export type LeaderboardEntry = {
   color: string;
   kills: number;
   hitCount: number;
+  alive: boolean; // 经典模式下存活优先于已淘汰
 };
 
 export type GameOverEvent = {
@@ -278,6 +346,8 @@ export type RoomListItem = {
   playerCount: number;
   maxPlayers: number;
   status: "waiting" | "countdown" | "playing" | "finished";
+  mode: GameMode;
+  mapTheme: MapThemeChoice; // 开局前为房主选择（可能是 random），开局后为实际主题
 };
 
 export type RoomListResponse = {
@@ -289,6 +359,8 @@ export type ServerMessage =
   | RoomCreatedResponse
   | RoomJoinedResponse
   | RoomErrorResponse
+  | RejoinSuccessResponse
+  | PlayerReconnectedEvent
   | LobbyUpdate
   | CountdownEvent
   | WorldSnapshot

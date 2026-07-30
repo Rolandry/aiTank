@@ -41,7 +41,9 @@ const SPAWN_CELLS: CellPoint[] = SPAWN_POINTS.map((spawn) => ({
   row: Math.floor(spawn.y / O),
 }));
 
-export type MapTheme = "grass_jungle" | "desert_gobi" | "snow_tundra" | "city_ruins";
+// 主题联合类型定义在协议层（双端唯一事实源），此处重新导出供服务端内部使用
+export type { MapTheme } from "./protocol";
+import type { MapTheme } from "./protocol";
 
 interface ObstacleTypeConfig {
   name: string;

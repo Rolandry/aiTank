@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { gameSocket, ConnectionState } from "../../network/socket";
+import { clearSession } from "../../network/session";
 import { GameRenderer } from "../../game/renderer";
 import {
   initInput,
@@ -13,7 +14,7 @@ import { getFailedAssets, FALLBACK_COLORS } from "../../game/assets";
 import { JitterBuffer } from "../../game/jitterBuffer";
 import { PerfMonitor } from "../../components/PerfMonitor";
 import { useSocketMessage } from "../../hooks/useSocketMessage";
-import type { WorldSnapshot, GameOverEvent } from "../../types/protocol";
+import type { WorldSnapshot, GameOverEvent, GameMode } from "../../types/protocol";
 import styles from "./index.module.css";
 
 export default function Game() {
@@ -33,7 +34,9 @@ export default function Game() {
   const [gameState, setGameState] = useState<string>("waiting");
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
   const [disconnected, setDisconnected] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const [myAlive, setMyAlive] = useState(true);
+  const [gameMode, setGameMode] = useState<GameMode>("deathmatch");
   const [muted, setMuted] = useState(false);
   const [assetWarning, setAssetWarning] = useState(false);
 
@@ -100,6 +103,7 @@ export default function Game() {
     jitterBufferRef.current.push(msg, Date.now());
 
     setGameState(msg.status);
+    setGameMode(msg.mode);
 
     const me = msg.players.find((p) => p.playerId === playerId);
     if (me) {
@@ -252,22 +256,51 @@ export default function Game() {
     rendererRef.current?.addDashEffect(msg.fromX, msg.fromY, msg.toX, msg.toY, color);
   });
 
-  // 断线检测
+  // 连接状态：区分「重连中」与「彻底断开」
   useEffect(() => {
     return gameSocket.onStateChange((state) => {
-      if (state === ConnectionState.DISCONNECTED) {
+      if (state === ConnectionState.RECONNECTING) {
+        setReconnecting(true);
+        disableInput();
+      } else if (state === ConnectionState.DISCONNECTED) {
+        setReconnecting(false);
         setDisconnected(true);
         disableInput();
       }
     });
   }, []);
 
+  // 重连成功：恢复控制继续对局。
+  // 断线期间若被击杀，服务端会正常安排复活，因此这里始终恢复输入。
+  useSocketMessage("rejoin_success", (msg) => {
+    setReconnecting(false);
+    setDisconnected(false);
+    if (!msg.isSpectator && msg.gameStatus === "playing") {
+      enableInput();
+    }
+  });
+
+  // 重连失败：凭证已失效，清理后回退首页
+  useSocketMessage("room_error", (msg) => {
+    if (msg.code !== "REJOIN_FAILED") return;
+    clearSession();
+    setReconnecting(false);
+    setDisconnected(true);
+  });
+
   const handleBackToHome = useCallback(() => {
+    // 主动退出必须清理凭证，否则会被误判为断线重连
+    clearSession();
     gameSocket.send({ type: "leave_room" });
     gameSocket.disconnect();
     audioManager.stopBgm();
     navigate("/");
   }, [navigate]);
+
+  // 退出前二次确认，避免误触丢失对局
+  const handleLeaveClick = useCallback(() => {
+    if (window.confirm("确定要退出当前对局吗？")) handleBackToHome();
+  }, [handleBackToHome]);
 
   const toggleMute = useCallback(() => {
     const newMuted = !muted;
@@ -292,6 +325,18 @@ export default function Game() {
         {muted ? "🔇" : "🔊"}
       </button>
 
+      {/* 主动退出 */}
+      <button className={styles.leaveButton} onClick={handleLeaveClick}>
+        退出
+      </button>
+
+      {/* 重连中：席位保留至本局结束，无需玩家操作 */}
+      {reconnecting && (
+        <div className={styles.reconnectingBanner}>
+          连接中断，正在重连…
+        </div>
+      )}
+
       {/* 性能监控 */}
       <PerfMonitor />
 
@@ -305,11 +350,11 @@ export default function Game() {
       {/* 观战标识 */}
       {isSpectator && <div className={styles.badge}>观战模式</div>}
 
-      {/* 被淘汰提示（击杀赛模式：3 秒后复活） */}
+      {/* 被淘汰提示：死斗模式 3 秒复活，经典模式永久淘汰转观战 */}
       {!isSpectator && !myAlive && gameState === "playing" && (
         <div className={styles.eliminatedOverlay}>
           <p>你被击杀了</p>
-          <p>3 秒后复活...</p>
+          <p>{gameMode === "classic" ? "本局已淘汰，观战中..." : "3 秒后复活..."}</p>
         </div>
       )}
 
