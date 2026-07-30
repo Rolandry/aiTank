@@ -434,13 +434,13 @@ export class GameRenderer {
     x: number,
     y: number
   ): void {
-    if (!player.kills || player.kills <= 0) return;
+    if (!player.streakKills || player.streakKills <= 0) return;
 
     const size = GAME_CONFIG.tankSize;
     const iconSize = 12;
     const gap = 2;
     const maxIcons = 8;
-    const shown = Math.min(player.kills, maxIcons);
+    const shown = Math.min(player.streakKills, maxIcons);
     const rowWidth = shown * (iconSize + gap) - gap;
     const startX = x + size / 2 - rowWidth / 2;
     const iconY = y - 32 - iconSize; // 昵称再上方
@@ -466,12 +466,12 @@ export class GameRenderer {
     }
 
     // 超过 maxIcons 时用 ×N 表示
-    if (player.kills > maxIcons) {
+    if (player.streakKills > maxIcons) {
       this.ctx.font = "bold 11px Arial";
       this.ctx.fillStyle = "#fff";
       this.ctx.textAlign = "left";
       this.ctx.fillText(
-        `×${player.kills}`,
+        `×${player.streakKills}`,
         startX + rowWidth + 4,
         iconY + iconSize
       );

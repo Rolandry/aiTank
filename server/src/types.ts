@@ -22,7 +22,8 @@ export interface ServerPlayer {
   hp: number;
   alive: boolean;
   hitCount: number;
-  kills: number; // 击杀数（击杀赛模式）
+  kills: number; // 总击杀数（后台累计，排行榜依据）
+  streakKills: number; // 当前连杀数（死亡清零，头顶星星显示）
   respawnAt: number | null; // 复活时间戳（死亡时设置，null 表示无需复活）
   lastShootTime: number;
   activeBullets: number;

@@ -210,7 +210,8 @@ export type PlayerSnapshot = {
   shield: number; // 剩余护盾点数
   effects: ActiveEffect[];
   dashCooldownMs: number; // 冲刺剩余冷却
-  kills: number; // 击杀数（击杀赛模式）
+  kills: number; // 总击杀数（排行榜依据）
+  streakKills: number; // 当前连杀数（头顶星星显示）
 };
 
 export type BulletSnapshot = {

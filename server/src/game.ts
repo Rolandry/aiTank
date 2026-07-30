@@ -62,6 +62,7 @@ export class GameWorld {
       p.alive = true;
       p.hitCount = 0;
       p.kills = 0;
+      p.streakKills = 0;
       p.respawnAt = null;
       p.activeBullets = 0;
       p.lastShootTime = 0;
@@ -605,7 +606,11 @@ export class GameWorld {
     });
     if (target.hp <= 0 && target.alive) {
       target.alive = false;
-      if (owner) owner.kills++;
+      target.streakKills = 0;
+      if (owner) {
+        owner.kills++;
+        owner.streakKills++;
+      }
       // 无尽死斗：3 秒后复活（断线玩家同样复活，重连后可继续）
       // 经典模式：一条命，死亡即永久淘汰
       target.respawnAt =
@@ -761,6 +766,7 @@ export class GameWorld {
           p.lastDashTime + this.dashCooldown(p) - now
         ),
         kills: p.kills,
+        streakKills: p.streakKills,
       })
     );
     return {

@@ -55,6 +55,7 @@ export class Room {
       alive: true,
       hitCount: 0,
       kills: 0,
+      streakKills: 0,
       respawnAt: null,
       lastShootTime: 0,
       activeBullets: 0,

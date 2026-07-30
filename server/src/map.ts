@@ -69,25 +69,25 @@ interface ObstaclePlacement {
 const THEMES: Record<MapTheme, ThemeConfig> = {
   grass_jungle: {
     obstacles: {
-      small: { name: "grass_jungle_tree", maxHp: 2 },
-      medium: { name: "grass_jungle_rock", maxHp: 4 },
-      large: { name: "grass_jungle_crate", maxHp: 6 },
+      small: { name: "grass_jungle_tree", maxHp: 3 },
+      medium: { name: "grass_jungle_rock", maxHp: 6 },
+      large: { name: "grass_jungle_crate", maxHp: 9 },
     },
     build: buildGrassJungle,
   },
   desert_gobi: {
     obstacles: {
-      small: { name: "desert_gobi_stone", maxHp: 2 },
-      medium: { name: "desert_gobi_ruins", maxHp: 5 },
-      large: { name: "desert_gobi_dune", maxHp: 7 },
+      small: { name: "desert_gobi_stone", maxHp: 3 },
+      medium: { name: "desert_gobi_ruins", maxHp: 6 },
+      large: { name: "desert_gobi_dune", maxHp: 9 },
     },
     build: buildDesertGobi,
   },
   snow_tundra: {
     obstacles: {
       small: { name: "snow_tundra_ice", maxHp: 3 },
-      medium: { name: "snow_tundra_snowblock", maxHp: 5 },
-      large: { name: "snow_tundra_crate", maxHp: 7 },
+      medium: { name: "snow_tundra_snowblock", maxHp: 6 },
+      large: { name: "snow_tundra_crate", maxHp: 9 },
     },
     build: buildSnowTundra,
   },
@@ -95,7 +95,7 @@ const THEMES: Record<MapTheme, ThemeConfig> = {
     obstacles: {
       small: { name: "city_ruins_steel", maxHp: 3 },
       medium: { name: "city_ruins_wall", maxHp: 6 },
-      large: { name: "city_ruins_barricade", maxHp: 8 },
+      large: { name: "city_ruins_barricade", maxHp: 9 },
     },
     build: buildCityRuins,
   },
@@ -565,11 +565,11 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
     }
   }
 
-  // 结构墙体：优先打包 2×2，再打包横向与纵向 2×1。
+  // 结构墙体：优先打包 2×2，再打包横向与纵向 2×1。全部可破坏。
   for (let row = 0; row < ROWS - 1; row++) {
     for (let col = 0; col < COLS - 1; col++) {
       if (canPack(grid, used, col, row, 2, 2)) {
-        placements.push({ kind: "large", col, row, gridW: 2, gridH: 2, rotation: 0, destructible: false });
+        placements.push({ kind: "large", col, row, gridW: 2, gridH: 2, rotation: 0, destructible: true });
         markUsed(used, col, row, 2, 2);
       }
     }
@@ -577,7 +577,7 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS - 1; col++) {
       if (canPack(grid, used, col, row, 2, 1)) {
-        placements.push({ kind: "medium", col, row, gridW: 2, gridH: 1, rotation: 0, destructible: false });
+        placements.push({ kind: "medium", col, row, gridW: 2, gridH: 1, rotation: 0, destructible: true });
         markUsed(used, col, row, 2, 1);
       }
     }
@@ -585,7 +585,7 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
   for (let row = 0; row < ROWS - 1; row++) {
     for (let col = 0; col < COLS; col++) {
       if (canPack(grid, used, col, row, 1, 2)) {
-        placements.push({ kind: "medium", col, row, gridW: 1, gridH: 2, rotation: 90, destructible: false });
+        placements.push({ kind: "medium", col, row, gridW: 1, gridH: 2, rotation: 90, destructible: true });
         markUsed(used, col, row, 1, 2);
       }
     }
@@ -599,7 +599,7 @@ function gridToObstacles(grid: SemanticGrid, config: ThemeConfig): ObstacleSnaps
       if (grid[row][col] === "wall" && !used[row][col]) {
         placements.push({
           kind: "small", col, row, gridW: 1, gridH: 1,
-          rotation: 0, destructible: true, hpMultiplier: 2,
+          rotation: 0, destructible: true,
         });
         used[row][col] = true;
       }
