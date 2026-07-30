@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { gameSocket, ConnectionState } from "../../network/socket";
-import { saveSession, clearSession } from "../../network/session";
+import { saveSession, clearSession, getLeftSession } from "../../network/session";
+import type { GameSession } from "../../network/session";
 import type {
   RoomListItem,
   GameMode,
@@ -19,6 +20,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState<RoomListItem[]>([]);
   const [connected, setConnected] = useState(false);
+  const [leftSession, setLeftSession] = useState<GameSession | null>(null);
+  const [rejoining, setRejoining] = useState(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchRooms = useCallback(() => {
@@ -28,8 +31,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // 回到首页说明已脱离房间，清理残留凭证避免误触发重连
-    clearSession();
+    // 保留主动退出留下的待回归凭证（用于「返回上一局」），
+    // 其余残留凭证清理掉，避免误触发自动重连。
+    const left = getLeftSession();
+    if (left) {
+      setLeftSession(left);
+      setNickname(left.nickname);
+    } else {
+      clearSession();
+    }
 
     gameSocket.connect().then(() => {
       setConnected(true);
@@ -59,6 +69,56 @@ export default function Home() {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
   }, [fetchRooms]);
+
+  // 返回上一局：凭保留的 sessionToken 回归原房间。
+  // 本局已结束时服务端返回 REJOIN_FAILED，此时清理凭证并收起横幅。
+  const handleRejoin = async () => {
+    if (!leftSession || rejoining) return;
+    setRejoining(true);
+    setError("");
+
+    try {
+      await gameSocket.connect();
+
+      const unsubOk = gameSocket.on("rejoin_success", (msg) => {
+        unsubOk();
+        unsubErr();
+        // 回归成功后凭证恢复为常规状态，重新启用自动重连
+        saveSession({
+          roomId: msg.roomId,
+          playerId: msg.playerId,
+          sessionToken: leftSession.sessionToken,
+          nickname: leftSession.nickname,
+        });
+        navigate(`/game/${msg.roomId}`, {
+          state: {
+            playerId: msg.playerId,
+            nickname: leftSession.nickname,
+            isSpectator: msg.isSpectator,
+          },
+        });
+      });
+
+      const unsubErr = gameSocket.on("room_error", (msg) => {
+        if (msg.code !== "REJOIN_FAILED") return;
+        unsubOk();
+        unsubErr();
+        clearSession();
+        setLeftSession(null);
+        setRejoining(false);
+        setError("上一局已结束，无法返回");
+      });
+
+      gameSocket.send({
+        type: "rejoin_room",
+        roomId: leftSession.roomId,
+        sessionToken: leftSession.sessionToken,
+      });
+    } catch {
+      setError("无法连接到服务器");
+      setRejoining(false);
+    }
+  };
 
   const validate = (): boolean => {
     if (nickname.length < 1 || nickname.length > 12) {
@@ -141,6 +201,22 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>AI 坦克竞技场</h1>
+
+      {/* 主动退出后的回归入口：席位保留至本局结束 */}
+      {leftSession && (
+        <div className={styles.rejoinBanner}>
+          <span className={styles.rejoinText}>
+            你还有一局未结束（房间 {leftSession.roomId}）
+          </span>
+          <button
+            onClick={handleRejoin}
+            disabled={rejoining}
+            className={styles.rejoinButton}
+          >
+            {rejoining ? "返回中..." : "返回上一局"}
+          </button>
+        </div>
+      )}
       <div className={styles.form}>
         <input
           type="text"

@@ -137,15 +137,16 @@ async function main(): Promise<void> {
   check("伪造凭证被拒绝", rejected?.code === "REJOIN_FAILED", rejected?.code ?? "无响应");
   faker.close();
 
-  // ── 场景 3：主动退出后凭证失效，无法重连 ──
+  // ── 场景 3：主动退出后凭证仍有效（席位保留至本局结束，支持手动回归）──
+  // 注意：退出会判定淘汰作为代价，详见 leave-rejoin-test.ts
   rejoined.send({ type: "leave_room" });
   await sleep(400);
   const afterLeave = new Client();
   await afterLeave.open();
   afterLeave.send({ type: "rejoin_room", roomId, sessionToken: guestToken });
-  const leaveRejected = await afterLeave.wait("room_error");
-  check("主动退出后凭证失效", leaveRejected?.code === "REJOIN_FAILED",
-    leaveRejected?.code ?? "仍可重连");
+  const leaveOk = await afterLeave.wait("rejoin_success");
+  check("主动退出后仍可回归本局", !!leaveOk,
+    leaveOk ? "成功" : "失败");
   afterLeave.close();
   rejoined.close();
 

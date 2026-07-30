@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { gameSocket, ConnectionState } from "../../network/socket";
-import { clearSession } from "../../network/session";
+import { clearSession, markLeft } from "../../network/session";
 import { GameRenderer } from "../../game/renderer";
 import {
   initInput,
@@ -289,18 +289,29 @@ export default function Game() {
   });
 
   const handleBackToHome = useCallback(() => {
-    // 主动退出必须清理凭证，否则会被误判为断线重连
-    clearSession();
+    // 对局中退出：保留凭证以便从首页回归本局；
+    // 已结束则无席位可回，直接清理。
+    if (gameState === "playing" || gameState === "countdown") {
+      markLeft();
+    } else {
+      clearSession();
+    }
     gameSocket.send({ type: "leave_room" });
     gameSocket.disconnect();
     audioManager.stopBgm();
     navigate("/");
-  }, [navigate]);
+  }, [navigate, gameState]);
 
-  // 退出前二次确认，避免误触丢失对局
+  // 退出前二次确认，并告知退出代价
   const handleLeaveClick = useCallback(() => {
-    if (window.confirm("确定要退出当前对局吗？")) handleBackToHome();
-  }, [handleBackToHome]);
+    const inMatch = gameState === "playing" || gameState === "countdown";
+    const msg = inMatch
+      ? gameMode === "classic"
+        ? "退出将算作被击杀一次。经典模式只有一条命，回归后只能观战。确定退出？"
+        : "退出将算作被击杀一次（对手获得击杀数）。本局结束前可从首页返回。确定退出？"
+      : "确定返回首页？";
+    if (window.confirm(msg)) handleBackToHome();
+  }, [handleBackToHome, gameState, gameMode]);
 
   const toggleMute = useCallback(() => {
     const newMuted = !muted;

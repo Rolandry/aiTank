@@ -46,6 +46,47 @@
   text-align: center;
 }
 
+/* 主动退出后的回归横幅 */
+.rejoinBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 12px 16px;
+  border: 2px solid #c88c28;
+  border-radius: 8px;
+  background: rgba(200, 140, 40, 0.16);
+}
+
+.rejoinText {
+  color: #f0d090;
+  font-size: 14px;
+}
+
+.rejoinButton {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #c88c28;
+  color: #1a1a2e;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.rejoinButton:hover:not(:disabled) {
+  background: #e0a038;
+}
+
+.rejoinButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* 模式选择 */
 .modeGroup {
   display: flex;

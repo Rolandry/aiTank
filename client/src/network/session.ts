@@ -8,6 +8,9 @@ export interface GameSession {
   playerId: string;
   sessionToken: string;
   nickname: string;
+  // true 表示玩家主动退出：席位仍保留，但需从首页手动点「返回上一局」回归，
+  // socket 不应对其自动重连，否则会绕过手动入口。
+  left?: boolean;
 }
 
 export function saveSession(session: GameSession): void {
@@ -31,10 +34,24 @@ export function loadSession(): GameSession | null {
       playerId: parsed.playerId,
       sessionToken: parsed.sessionToken,
       nickname: parsed.nickname ?? "",
+      left: parsed.left === true,
     };
   } catch {
     return null;
   }
+}
+
+// 主动退出：保留凭证以便回归本局，但打上 left 标记停止自动重连
+export function markLeft(): void {
+  const session = loadSession();
+  if (!session) return;
+  saveSession({ ...session, left: true });
+}
+
+// 存在待回归的对局凭证时返回它，否则返回 null
+export function getLeftSession(): GameSession | null {
+  const session = loadSession();
+  return session?.left ? session : null;
 }
 
 export function clearSession(): void {

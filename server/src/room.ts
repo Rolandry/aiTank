@@ -88,6 +88,10 @@ export class Room {
   // 断线重连：校验凭证后把旧 socket 替换为新连接，沿用原 playerId 与战绩。
   // 席位保留至本局结束，重连后玩家直接恢复控制继续对局。
   rejoinPlayer(socket: WebSocket, sessionToken: string): ServerPlayer | null {
+    // 席位承诺仅到本局结束：已结束的对局不再接受回归，
+    // 否则玩家会进入一个无法继续游戏的死局房间。
+    if (this.status === "finished") return null;
+
     const player = [...this.players.values()].find(
       (p) => p.sessionToken === sessionToken
     );
@@ -138,19 +142,18 @@ export class Room {
       this.broadcastLobby();
     } else {
       // playing / finished：仅标记离线，坦克留在场上但停止响应输入。
-      // 不判定淘汰，玩家重连后可直接恢复控制继续对局。
+      // 席位保留至本局结束，凭证不作废，玩家可重连回归。
       player.connected = false;
       player.disconnectedAt = Date.now();
       // 断线后不继承旧输入，避免坦克持续移动
       player.input = { up: false, down: false, left: false, right: false };
-      if (intentional) {
-        // 主动退出：作废凭证并判定淘汰，席位不再保留
-        player.sessionToken = "";
-        if (this.status === "playing" && player.alive) {
-          player.alive = false;
-          player.respawnAt = null;
-          this.broadcast({ type: "player_eliminated", playerId, killerId: null });
-        }
+      if (intentional && this.status === "playing" && player.alive) {
+        // 主动退出等价于原地被击杀一次：付出代价，避免用退出规避伤害。
+        // 死斗模式安排复活，回归后可继续参战；经典模式一条命耗尽，只能观战。
+        player.alive = false;
+        player.respawnAt =
+          this.mode === "deathmatch" ? Date.now() + RESPAWN_DELAY_MS : null;
+        this.broadcast({ type: "player_eliminated", playerId, killerId: null });
       }
       this.checkEmpty();
     }

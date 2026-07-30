@@ -183,7 +183,9 @@ export class GameSocket {
   // 失败由服务端返回 REJOIN_FAILED，页面层负责清理凭证并回退首页。
   private tryRejoin(): void {
     const session = loadSession();
-    if (!session || this.ws?.readyState !== WebSocket.OPEN) return;
+    // 主动退出的凭证不自动重连：由首页「返回上一局」手动触发
+    if (!session || session.left) return;
+    if (this.ws?.readyState !== WebSocket.OPEN) return;
     this.ws.send(
       JSON.stringify({
         type: "rejoin_room",
