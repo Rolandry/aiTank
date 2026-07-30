@@ -4,4 +4,8 @@ dist/
 .env.local
 *.log
 .DS_Store
-.codeflicker/
+.codeflicker/*
+# 项目级 skill 属于团队共享资产，需纳入版本管理。
+# 用 .codeflicker/* 而非 .codeflicker/ 忽略，使下层例外规则生效；
+# 未来新增的缓存、会话目录仍会被自动忽略。
+!.codeflicker/skills/
