@@ -53,6 +53,8 @@ export class GameRenderer {
     this.ctx = canvas.getContext("2d")!;
     canvas.width = GAME_CONFIG.mapWidth;
     canvas.height = GAME_CONFIG.mapHeight;
+    // 素材为像素风（crispEdges），放大时关闭插值以保持锐利
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   setMyPlayerId(id: string): void {
@@ -150,14 +152,16 @@ export class GameRenderer {
 
   private clear(mapTheme = "grass_jungle"): void {
     const assetKey = MAP_THEME_ASSETS[mapTheme] ?? MAP_THEME_ASSETS.grass_jungle;
-    const tile = getAsset(assetKey);
-    if (tile) {
-      const tileSize = 64;
-      for (let x = 0; x < GAME_CONFIG.mapWidth; x += tileSize) {
-        for (let y = 0; y < GAME_CONFIG.mapHeight; y += tileSize) {
-          this.ctx.drawImage(tile, x, y, tileSize, tileSize);
-        }
-      }
+    const fullMap = getAsset(assetKey);
+    if (fullMap) {
+      // 整图 512×384（16×12 格 @32px），一次性拉伸铺满 1024×768 画布（2 倍）
+      this.ctx.drawImage(
+        fullMap,
+        0,
+        0,
+        GAME_CONFIG.mapWidth,
+        GAME_CONFIG.mapHeight
+      );
     } else {
       this.ctx.fillStyle = MAP_THEME_FALLBACKS[mapTheme] ?? MAP_THEME_FALLBACKS.grass_jungle;
       this.ctx.fillRect(0, 0, GAME_CONFIG.mapWidth, GAME_CONFIG.mapHeight);

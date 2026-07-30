@@ -49,11 +49,11 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
     });
   }
 
-  // 地图背景（按服务端下发的 mapTheme 选择）
+  // 地图背景：16×12 完整整图（512×384），按服务端下发的 mapTheme 选择
   for (const theme of ["grass_jungle", "desert_gobi", "snow_tundra", "city_ruins"]) {
     paths.push({
       key: `map_${theme}`,
-      path: `/assets/maps/map_${theme}_tile.png`,
+      path: `/assets/maps/fullmap_${theme}_16x12.png`,
     });
   }
 
