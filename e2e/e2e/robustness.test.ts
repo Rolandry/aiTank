@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { chromium, type Browser, type BrowserContext } from "playwright";
 import { spawn, type ChildProcess } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const TEST_DIR = dirname(fileURLToPath(import.meta.url));
+const PROJECT_DIR = resolve(TEST_DIR, "../..");
+const SERVER_DIR = resolve(PROJECT_DIR, "server");
+const CLIENT_DIR = resolve(PROJECT_DIR, "client");
 
 const CLIENT_PORT = 3999;
 const SERVER_PORT = 8181;
@@ -12,18 +19,32 @@ let clientProcess: ChildProcess;
 
 beforeAll(async () => {
   // 启动服务端
-  serverProcess = spawn("npx", ["tsx", "src/index.ts"], {
-    cwd: "/Users/luohengxu/aiTank/server",
-    env: { ...process.env, PORT: String(SERVER_PORT) },
-    stdio: "pipe",
-  });
+  serverProcess = spawn(
+    process.execPath,
+    [resolve(SERVER_DIR, "node_modules/tsx/dist/cli.mjs"), "src/index.ts"],
+    {
+      cwd: SERVER_DIR,
+      env: { ...process.env, PORT: String(SERVER_PORT) },
+      stdio: "pipe",
+    }
+  );
   await new Promise((r) => setTimeout(r, 1000));
 
   // 启动客户端
-  clientProcess = spawn("npx", ["vite", "--port", String(CLIENT_PORT), "--host"], {
-    cwd: "/Users/luohengxu/aiTank/client",
-    stdio: "pipe",
-  });
+  clientProcess = spawn(
+    process.execPath,
+    [
+      resolve(CLIENT_DIR, "node_modules/vite/bin/vite.js"),
+      "--port",
+      String(CLIENT_PORT),
+      "--host",
+    ],
+    {
+      cwd: CLIENT_DIR,
+      env: { ...process.env, VITE_WS_URL: `ws://127.0.0.1:${SERVER_PORT}/ws` },
+      stdio: "pipe",
+    }
+  );
   await new Promise((r) => setTimeout(r, 2000));
 
   browser = await chromium.launch({ headless: true });

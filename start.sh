@@ -112,10 +112,14 @@ require_command npm
 require_command curl
 require_command lsof
 
-NODE_MAJOR="$(node -p 'Number(process.versions.node.split(".")[0])')"
+NODE_VERSION="$(node -p 'process.versions.node')"
+NODE_MAJOR="${NODE_VERSION%%.*}"
 if (( NODE_MAJOR < 18 )); then
   error "当前 Node.js 版本为 $(node --version)，请升级到 18 或更高版本。"
   exit 1
+fi
+if (( NODE_MAJOR < 22 )); then
+  info "当前 Node.js 版本为 $(node --version)，可正常启动；运行 Vitest 4 完整测试建议使用 Node.js 22。"
 fi
 
 info "正在检查已运行的游戏服务..."

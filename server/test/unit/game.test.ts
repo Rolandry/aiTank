@@ -10,6 +10,9 @@ function createMockRoom(): Room {
   return {
     roomId: "TEST",
     status: "playing",
+    mode: "deathmatch",
+    themeChoice: "random",
+    mapTheme: "grass_jungle",
     players,
     winnerId: null,
     isDraw: false,
@@ -32,11 +35,18 @@ function createPlayer(overrides: Partial<ServerPlayer> = {}): ServerPlayer {
     hp: GAME_CONFIG.maxHp,
     alive: true,
     hitCount: 0,
+    kills: 0,
+    respawnAt: null,
     lastShootTime: 0,
     activeBullets: 0,
     input: { up: false, down: false, left: false, right: false },
     lastInputSeq: 0,
     connected: true,
+    sessionToken: "test-session-token",
+    disconnectedAt: null,
+    effects: new Map(),
+    shield: 0,
+    lastDashTime: 0,
     ...overrides,
   };
 }
