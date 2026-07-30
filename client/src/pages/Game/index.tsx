@@ -222,11 +222,11 @@ export default function Game() {
   // 障碍物受伤
   useSocketMessage("obstacle_hit", (msg) => {
     audioManager.play("hit", 0.3);
+    rendererRef.current?.flashObstacle(msg.obstacleId);
   });
 
-  // 技能球拾取：坦克边缘闪光 + 音效
+  // 技能球拾取：音效
   useSocketMessage("powerup_collected", (msg) => {
-    rendererRef.current?.flashPickup(msg.playerId);
     audioManager.playWithDistance(
       "coin",
       msg.x,

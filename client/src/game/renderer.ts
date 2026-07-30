@@ -35,7 +35,7 @@ export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private myPlayerId: string | null = null;
   private hitFlashMap = new Map<string, number>();
-  private pickupFlashMap = new Map<string, number>();
+  private obstacleFlashMap = new Map<string, number>();
   private dashEffects: Array<{
     fromX: number;
     fromY: number;
@@ -65,8 +65,8 @@ export class GameRenderer {
     this.hitFlashMap.set(playerId, Date.now());
   }
 
-  flashPickup(playerId: string): void {
-    this.pickupFlashMap.set(playerId, Date.now());
+  flashObstacle(obstacleId: string): void {
+    this.obstacleFlashMap.set(obstacleId, Date.now());
   }
 
   addDashEffect(fromX: number, fromY: number, toX: number, toY: number, color: string): void {
@@ -247,48 +247,36 @@ export class GameRenderer {
       const assetKey = OBSTACLE_ASSETS[type];
       const img = getAsset(assetKey);
 
+      // 受伤时降低透明度
+      const flashTime = obs.destructible ? this.obstacleFlashMap.get(obs.obstacleId) : undefined;
+      let flashAlpha = 1;
+      if (flashTime) {
+        const elapsed = Date.now() - flashTime;
+        if (elapsed < 200) {
+          flashAlpha = 0.3 + (elapsed / 200) * 0.7;
+        } else {
+          this.obstacleFlashMap.delete(obs.obstacleId);
+        }
+      }
+
+      this.ctx.save();
+      this.ctx.globalAlpha = flashAlpha;
+
       if (img) {
         if (obs.rotation === 90) {
-          this.ctx.save();
           this.ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
           this.ctx.rotate(Math.PI / 2);
           this.ctx.drawImage(img, -obs.height / 2, -obs.width / 2, obs.height, obs.width);
-          this.ctx.restore();
         } else {
           this.ctx.drawImage(img, obs.x, obs.y, obs.width, obs.height);
         }
       } else {
-        // 降级：不同类型用不同颜色
         this.ctx.fillStyle = OBSTACLE_COLORS[type] || FALLBACK_COLORS.wall;
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       }
 
-      // 可破坏障碍物显示血条；可破坏性已由素材规格表达（1×1 可破坏），
-      // 因此不再叠加白色边框标记。
-      if (obs.destructible && obs.hp !== undefined && obs.maxHp !== undefined) {
-        this.renderObstacleHp(obs.x, obs.y, obs.width, obs.hp, obs.maxHp);
-      }
+      this.ctx.restore();
     }
-  }
-
-  private renderObstacleHp(
-    x: number,
-    y: number,
-    width: number,
-    hp: number,
-    maxHp: number
-  ): void {
-    const barWidth = width;
-    const barHeight = 3;
-    const hpPercent = hp / maxHp;
-
-    // 背景
-    this.ctx.fillStyle = "#333";
-    this.ctx.fillRect(x, y - 6, barWidth, barHeight);
-
-    // 血条
-    this.ctx.fillStyle = hpPercent > 0.5 ? "#2ecc71" : "#e74c3c";
-    this.ctx.fillRect(x, y - 6, barWidth * hpPercent, barHeight);
   }
 
   // 技能球：脉动光环 + 分类颜色 + 效果首字
@@ -433,30 +421,6 @@ export class GameRenderer {
         this.ctx.strokeStyle = "#fff";
         this.ctx.lineWidth = 3;
         this.ctx.strokeRect(x - 2, y - 2, size + 4, size + 4);
-      }
-
-      // 拾取技能球闪光（坦克边缘闪两下）
-      const pickupTime = this.pickupFlashMap.get(player.playerId);
-      if (pickupTime) {
-        const elapsed = Date.now() - pickupTime;
-        const DURATION = 600;
-        if (elapsed < DURATION) {
-          // 两次脉冲：0-250ms 和 300-550ms
-          const pulse1 = elapsed < 250 ? Math.sin((elapsed / 250) * Math.PI) : 0;
-          const pulse2 = elapsed >= 300 && elapsed < 550 ? Math.sin(((elapsed - 300) / 250) * Math.PI) : 0;
-          const intensity = Math.max(pulse1, pulse2);
-          if (intensity > 0) {
-            this.ctx.save();
-            this.ctx.strokeStyle = `rgba(255, 255, 255, ${intensity})`;
-            this.ctx.lineWidth = 4;
-            this.ctx.beginPath();
-            this.ctx.arc(player.x, player.y, size / 2 + 4 + intensity * 6, 0, Math.PI * 2);
-            this.ctx.stroke();
-            this.ctx.restore();
-          }
-        } else {
-          this.pickupFlashMap.delete(player.playerId);
-        }
       }
 
       this.renderPlayerInfo(player, x, y, size);

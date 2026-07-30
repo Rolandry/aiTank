@@ -38,7 +38,7 @@ function getAssetPaths(): Array<{ key: string; path: string }> {
   }
 
   // 子弹
-  paths.push({ key: "bullet", path: "/assets/bullets/bullet.png" });
+  paths.push({ key: "bullet", path: "/assets/bullets/bullet_default.png" });
 
   // 爆炸帧（4个独立文件）
   for (let i = 1; i <= 4; i++) {
